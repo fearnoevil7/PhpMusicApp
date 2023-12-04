@@ -17,10 +17,14 @@
         <link rel="stylesheet" href="/assets/css/style.php">
     </head>
     <body>
+    <?php
+        // var_dump($loggedUser['messages'][0][1]);
+        // var_dump($loggedUser['messages'][0][0]['Sender']);
+    ?>
     <div class="container-fluid">
             <div class="row">
                 <!-- sidebar -->
-                <div class="no-padding sidebar">
+                <div class="no-padding sidebar" style="display: none;">
                     <!-- music col -->
                     <div class="music mt-0">
                         <ul class="list-group list-group-flush">
@@ -495,7 +499,7 @@
                     <div style="margin: 0px 0px 0px 250px;">
                         <h1 style="color: #6c757d; margin: 0px 0px 0px 7px; font-size: 20pt;">Leave <?=$UserToBeShown['FirstName']?> a Message <i style="margin: 0px 0px 0px 52px; color: #bebebe;" class="far fa-comment-alt"></i></h1>
                         <form <?php echo "action=/Message/Create/" . $this->session->userdata('UserId') . "/" . $UserToBeShown['Id'] . "/" ?> method = POST >
-                            <input type="hidden" name="MessageTypeBoolean" value="TRUE">
+                            <input type="hidden" name="whatIsBeingCommentedOn" value="TRUE">
                             <textarea cols=43 rows = 3 name = Content class="form-control" style="width: 430px; margin: 16px 0px 0px 0px;"></textarea>
                             <button class="superbtn btn1" style="margin: 34px 0px 0px 370px;">
                                 Post
@@ -505,140 +509,32 @@
                     </div>
                     <div style="margin: 0px 0px 0px 124px;">
                         <?php
-                            // echo gettype(date("m")) . "<br>";
                             date_default_timezone_set('America/Chicago');
-                            // if(date("H") > 12) {
-                            //     // echo date("H") - 12 . ":" . date("i") . "<br>";
-                            //     if(date("m") == "01"){
-                            //         echo "January " . date("d") . ", " . date("Y") . "  ";
-                            //         echo date("H") - 12 . ":" . date("i") . " PM <br>";
-                            //     }
-                            //     if(date("m") == "02"){
-                            //         echo "February " . date("d") . ", " . date("Y") . "  ";
-                            //         echo date("H") - 12 . ":" . date("i") . " PM <br>";
-                            //     }
-                            //     if(date("m") == "03"){
-                            //         echo "March " . date("d") . ", " . date("Y") . "  ";
-                            //         echo date("H") - 12 . ":" . date("i") . " PM <br>";
-                            //     }
-                            //     if(date("m") == "04"){
-                            //         echo "April " . date("d") . ", " . date("Y") . "  ";
-                            //         echo date("H") - 12 . ":" . date("i") . " PM <br>";
-                            //     }
-                            //     if(date("m") == "05"){
-                            //         echo "May " . date("d") . ", " . date("Y") . "  ";
-                            //         echo date("H") - 12 . ":" . date("i") . " PM <br>";
-                            //     }
-                            //     if(date("m") == "06"){
-                            //         echo "June " . date("d") . ", " . date("Y") . "  ";
-                            //         echo date("H") - 12 . ":" . date("i") . " PM <br>";
-                            //     }
-                            //     if(date("m") == "07"){
-                            //         echo "July " . date("d") . ", " . date("Y") . "  ";
-                            //         echo date("H") - 12 . ":" . date("i") . " PM <br>";
-                            //     }
-                            //     if(date("m") == "08"){
-                            //         echo "August " . date("d") . ", " . date("Y") . "  ";
-                            //         echo date("H") - 12 . ":" . date("i") . " PM <br>";
-                            //     }
-                            //     if(date("m") == "09"){
-                            //         echo "September " . date("d") . ", " . date("Y") . "  ";
-                            //         echo date("H") - 12 . ":" . date("i") . " PM <br>";
-                            //     }
-                            //     if(date("m") == "10"){
-                            //         echo "October " . date("d") . ", " . date("Y") . "  ";
-                            //         echo date("H") - 12 . ":" . date("i") . " PM <br>";
-                            //     }
-                            //     if(date("m") == "11"){
-                            //         echo "November " . date("d") . ", " . date("Y") . "  ";
-                            //         echo date("H") - 12 . ":" . date("i") . " PM <br>";
-                            //     }
-                            //     if(date("m") == "12"){
-                            //         echo "December " . date("d") . ", " . date("Y") . "  ";
-                            //         echo date("H") - 12 . ":" . date("i") . " PM <br>";
-                            //     }
-                            // }
-                            // else
-                            // {
-                            //     if(date("m") == "01"){
-                            //         echo "January " . date("d") . ", " . date("Y") . "  ";
-                            //         echo date("H") . ":" . date("i") . " AM <br>";
-                            //     }
-                            //     if(date("m") == "02"){
-                            //         echo "February " . date("d") . ", " . date("Y") . "  ";
-                            //         echo date("H") . ":" . date("i") . " AM <br>";
-                            //     }
-                            //     if(date("m") == "03"){
-                            //         echo "March " . date("d") . ", " . date("Y") . "  ";
-                            //         echo date("H") . ":" . date("i") . " AM <br>";
-                            //     }
-                            //     if(date("m") == "04"){
-                            //         echo "April " . date("d") . ", " . date("Y") . "  ";
-                            //         echo date("H") . ":" . date("i") . " AM <br>";
-                            //     }
-                            //     if(date("m") == "05"){
-                            //         echo "May " . date("d") . ", " . date("Y") . "  ";
-                            //         echo date("H") . ":" . date("i") . " AM <br>";
-                            //     }
-                            //     if(date("m") == "06"){
-                            //         echo "June " . date("d") . ", " . date("Y") . "  ";
-                            //         echo date("H") . ":" . date("i") . " AM <br>";
-                            //     }
-                            //     if(date("m") == "07"){
-                            //         echo "July " . date("d") . ", " . date("Y") . "  ";
-                            //         echo date("H") . ":" . date("i") . " AM <br>";
-                            //     }
-                            //     if(date("m") == "08"){
-                            //         echo "August " . date("d") . ", " . date("Y") . "  ";
-                            //         echo date("H") . ":" . date("i") . " AM <br>";
-                            //     }
-                            //     if(date("m") == "09"){
-                            //         echo "September " . date("d") . ", " . date("Y") . "  ";
-                            //         echo date("H") . ":" . date("i") . " AM <br>";
-                            //     }
-                            //     if(date("m") == "10"){
-                            //         echo "October " . date("d") . ", " . date("Y") . "  ";
-                            //         echo date("H") . ":" . date("i") . " AM <br>";
-                            //     }
-                            //     if(date("m") == "11"){
-                            //         echo "November " . date("d") . ", " . date("Y") . "  ";
-                            //         echo date("H") . ":" . date("i") . " AM <br>";
-                            //     }
-                            //     if(date("m") == "12"){
-                            //         echo "December " . date("d") . ", " . date("Y") . "  ";
-                            //         echo date("H") . ":" . date("i") . " AM <br>";
-                            //     }
-                            // }
-                            // if(date("m" == 1)){
-
-                            // }
-                            // echo date("m-d-Y, H:i");
-                            // echo $message['CreatedAt']['Date']['Month'];
-                            foreach($messages4song['Messages'] as $message){
+                            foreach($loggedUser['messages'] as $message){
                         ?>
                                 <div class = waffles id = UserProfilePic2 style="margin: 70px 0px 34px 70px;">
-                                            <img class=UserProfilePic <?php echo "src=" . $message['PosterPicUrl'] ?> >
+                                            <img class=UserProfilePic <?php echo "src=" . $message[1]['ProfilePicUrl'] ?> >
                                         </div>
                                         <div class = waffles>
                                             <div style="width: 300px;">
-                                                <a class = messagedate <?php echo "href = /user/show/" . $message['UserId']?>> <b> <?= $message['PosterName'] ?></b></a>
+                                                <a class = messagedate <?php echo "href = /user/show/" . $message[0]['Sender']?>> <b> <?= $message[1]['FirstName'] . " " . $message[1]['LastName'] ?></b></a>
                                                 <span class = messagedate style="margin: 0px 0px 0px 7px;">
                                                     <?php
                                                     
                                                     // echo json_decode($message['CreatedAt'])->Date->Month; 
-                                                    if(json_decode($message['CreatedAt'])->Date->Year == date("Y")){
-                                                        if(json_decode($message['CreatedAt'])->Date->Year == date("Y") && json_decode($message['CreatedAt'])->Date->NumericalMonth == date("m")){
-                                                            if(json_decode($message['CreatedAt'])->Date->Year == date("Y") && json_decode($message['CreatedAt'])->Date->NumericalMonth == date("m") && json_decode($message['CreatedAt'])->Date->Day == date("d")){
+                                                    if(json_decode($message[0]['CreatedAt'])->Date->Year == date("Y")){
+                                                        if(json_decode($message[0]['CreatedAt'])->Date->Year == date("Y") && json_decode($message[0]['CreatedAt'])->Date->NumericalMonth == date("m")){
+                                                            if(json_decode($message[0]['CreatedAt'])->Date->Year == date("Y") && json_decode($message[0]['CreatedAt'])->Date->NumericalMonth == date("m") && json_decode($message[0]['CreatedAt'])->Date->Day == date("d")){
                                                                 $hour;
                                                                 if(date("H") > 12){
                                                                     $hour = date("H") - 12;
-                                                                    if(json_decode($message['CreatedAt'])->Time->Hour == $hour){
-                                                                        if(json_decode($message['CreatedAt'])->Time->Minutes == date("i")){
+                                                                    if(json_decode($message[0]['CreatedAt'])->Time->Hour == $hour){
+                                                                        if(json_decode($message[0]['CreatedAt'])->Time->Minutes == date("i")){
                                                                             echo "now";
                                                                         }
                                                                         else
                                                                         {
-                                                                            echo date("i") - json_decode($message['CreatedAt'])->Time->Minutes . " min ago";
+                                                                            echo date("i") - json_decode($message[0]['CreatedAt'])->Time->Minutes . " min ago";
                                                                             // echo json_decode($message['CreatedAt'])->Date->Day;
                                                                             // echo number_format(date("d"));
                                                                             // echo date("d");
@@ -650,24 +546,24 @@
                                                                     }
                                                                     else
                                                                     {
-                                                                        if($hour - json_decode($message['CreatedAt'])->Time->Hour > 1){
-                                                                            echo $hour - json_decode($message['CreatedAt'])->Time->Hour . " hours ago";
+                                                                        if($hour - json_decode($message[0]['CreatedAt'])->Time->Hour > 1){
+                                                                            echo $hour - json_decode($message[0]['CreatedAt'])->Time->Hour . " hours ago";
                                                                         }
                                                                         else
                                                                         {
-                                                                            echo $hour - json_decode($message['CreatedAt'])->Time->Hour . " hour ago";
+                                                                            echo $hour - json_decode($message[0]['CreatedAt'])->Time->Hour . " hour ago";
                                                                         }
                                                                     }
                                                                 }
                                                                 else
                                                                 {
-                                                                    if(json_decode($message['CreatedAt'])->Time->Hour == date("H")){
-                                                                        if(json_decode($message['CreatedAt'])->Time->Minutes == date("i")){
+                                                                    if(json_decode($message[0]['CreatedAt'])->Time->Hour == date("H")){
+                                                                        if(json_decode($message[0]['CreatedAt'])->Time->Minutes == date("i")){
                                                                             echo "now";
                                                                         }
                                                                         else
                                                                         {
-                                                                            echo date("i") - json_decode($message['CreatedAt'])->Time->Minutes . " min ago";
+                                                                            echo date("i") - json_decode($message[0]['CreatedAt'])->Time->Minutes . " min ago";
                                                                         }
                                                                         // var_dump(json_decode($message['CreatedAt'])->Time->Hour);
                                                                         // var_dump(json_decode($message['CreatedAt'])->Time->Minutes);
@@ -676,12 +572,12 @@
                                                                     }
                                                                     else
                                                                     {
-                                                                        if($hour - json_decode($message['CreatedAt'])->Time->Hour > 1){
-                                                                            echo $hour - json_decode($message['CreatedAt'])->Time->Hour . " hours ago";
+                                                                        if($hour - json_decode($message[0]['CreatedAt'])->Time->Hour > 1){
+                                                                            echo $hour - json_decode($message[0]['CreatedAt'])->Time->Hour . " hours ago";
                                                                         }
                                                                         else
                                                                         {
-                                                                            echo $hour - json_decode($message['CreatedAt'])->Time->Hour . " hour ago";
+                                                                            echo $hour - json_decode($message[0]['CreatedAt'])->Time->Hour . " hour ago";
                                                                         }
                                                                     }
                                                                 }
@@ -689,44 +585,44 @@
                                                             else
                                                             {
                                                                 
-                                                                if(number_format(date("d")) - json_decode($message['CreatedAt'])->Date->Day >= 7){
+                                                                if(number_format(date("d")) - json_decode($message[0]['CreatedAt'])->Date->Day >= 7){
                                                                     echo "1 week ago";
-                                                                } elseif(number_format(date("d")) - json_decode($message['CreatedAt'])->Date->Day >= 14){
+                                                                } elseif(number_format(date("d")) - json_decode($message[0]['CreatedAt'])->Date->Day >= 14){
                                                                     echo "2 weeks ago";
-                                                                } elseif(number_format(date("d")) - json_decode($message['CreatedAt'])->Date->Day >= 21){
+                                                                } elseif(number_format(date("d")) - json_decode($message[0]['CreatedAt'])->Date->Day >= 21){
                                                                     echo "3 weeks ago";
                                                                 }
                                                                 else
                                                                 {
-                                                                    if(number_format(date("d")) - json_decode($message['CreatedAt'])->Date->Day > 1){
-                                                                        echo number_format(date("d")) - json_decode($message['CreatedAt'])->Date->Day . " days ago";
+                                                                    if(number_format(date("d")) - json_decode($message[0]['CreatedAt'])->Date->Day > 1){
+                                                                        echo number_format(date("d")) - json_decode($message[0]['CreatedAt'])->Date->Day . " days ago";
                                                                     }
                                                                     else
                                                                     {
-                                                                        echo number_format(date("d")) - json_decode($message['CreatedAt'])->Date->Day . " day ago";
+                                                                        echo number_format(date("d")) - json_decode($message[0]['CreatedAt'])->Date->Day . " day ago";
                                                                     }
                                                                 }
                                                             }
                                                         }
                                                         else
                                                         {
-                                                            if(number_format(date("m")) - json_decode($message['CreatedAt'])->Date->Month > 1){
-                                                                echo number_format(date("m")) - json_decode($message['CreatedAt'])->Date->Month . " months ago";
+                                                            if(number_format(date("m")) - json_decode($message[0]['CreatedAt'])->Date->Month > 1){
+                                                                echo number_format(date("m")) - json_decode($message[0]['CreatedAt'])->Date->Month . " months ago";
                                                             }
                                                             else
                                                             {
-                                                                echo number_format(date("m")) - json_decode($message['CreatedAt'])->Date->Month . " month ago";
+                                                                echo number_format(date("m")) - json_decode($message[0]['CreatedAt'])->Date->Month . " month ago";
                                                             }
                                                         }
                                                     }
                                                     else
                                                     {
-                                                        if(number_format(date("Y")) - json_decode($message['CreatedAt'])->Date->Year > 1){
-                                                            echo number_format(date("Y")) - json_decode($message['CreatedAt'])->Date->Year . " years ago";
+                                                        if(number_format(date("Y")) - json_decode($message[0]['CreatedAt'])->Date->Year > 1){
+                                                            echo number_format(date("Y")) - json_decode($message[0]['CreatedAt'])->Date->Year . " years ago";
                                                         }
                                                         else
                                                         {
-                                                            echo number_format(date("Y")) - json_decode($message['CreatedAt'])->Date->Year . " year ago";
+                                                            echo number_format(date("Y")) - json_decode($message[0]['CreatedAt'])->Date->Year . " year ago";
                                                         }
                                                     }
 
@@ -735,15 +631,15 @@
                                                 </span>
                                             </div>
                                             <br>
-                                            <p style="width: 673px;"><?= $message['Content'] ?></p>
+                                            <p style="width: 673px;"><?= $message[0]['Content'] ?></p>
                                             
                                             <div style="width: 700px;">
                                                 <div class = dropdown style="display: inline-block; margin: 0px 52px 0px 0px;">
                                                     <a id=commentdropdown class = 'dropbtn' data-toggle = dropdown aria-haspopup = true aria-expanded = false  >Reply</a>
                                                     <div class = dropdown-menu>
-                                                        <span><u>Reply To <?= $message['PosterName'] ?></u></span>
+                                                        <span>Reply To <?php echo $message[1]['FirstName'] . " " . $message[1]['LastName'] ?></span>
                                                         <div class = dropdown-divider></div>
-                                                        <form class = dropdown-item <?php echo "action=/comment/" . $message['PosterId'] . "/" . $message['PostId'] . "/" . $UserToBeShown['Id'] ?> method=POST>
+                                                        <form class = dropdown-item <?php echo "action=/Comment/Create/" . $message[0]['Sender'] . "/" . $message[0]['MessageId'] . "/" . $loggedUser['IdNumber'] ?> method=POST>
                                                             <img class=UserProfilePic2 src =<?= $loggedUser['Url']?> >
                                                             <textarea class=commenttextbox cols = 34 rows = 1 name = Content></textarea>
                                                             <input type="hidden" name="IsWallPostComment" value="TRUE">
@@ -755,31 +651,31 @@
                                                     <a id=commentdropdown class = 'dropbtn' data-toggle = dropdown aria-haspopup=true aria-expanded = false>View Replies</a>
                                                     <div class = dropdown-menu style="background-color: #f8f9fa; border: none;">
                                                     <?php
-                                                        for($z=0; $z<count($comments['allcomments']); $z++){
-                                                            if($comments['allcomments'][$z]['WallPostId'] == $message['PostId']){
+                                                        foreach($message[2] as $comment){
+                                                            if($comment[0]['MessageId'] == $message[0]['MessageId']){
                                                     ?>
                                                                 <div style="display: inline-block;">
-                                                                    <img style="height: 43px; width: 43px; margin: 0px 25px 25px 0px;" <?php echo "src=" . $comments['allcomments'][$z]['PosterPicUrl'] ?> >
+                                                                    <img style="height: 43px; width: 43px; margin: 0px 25px 25px 0px;" <?php echo "src=" . $comment[1]['ProfilePicUrl'] ?> >
                                                                 </div>
                                                                 <div style="display: inline-block; width: 400px;">
-                                                                    <a class = messagedate <?php echo "href = /user/show/" . $message['UserId']?>> <b> <?= $comments['allcomments'][$z]['PosterName'] ?> </b></a>
+                                                                    <a class = messagedate <?php echo "href = /user/show/" . $message[0]['Sender']?>> <b> <?= $comment[1]['FirstName'] . " " . $comment[1]['LastName'] ?> </b></a>
                                                                     <span class = messagedate style="margin: 0px 0px 0px 7px;">
                                                     <?php
                                                     
                                                     // echo json_decode($message['CreatedAt'])->Date->Month; 
-                                                    if(json_decode($comments['allcomments'][$z]['CreatedAt'])->Date->Year == date("Y")){
-                                                        if(json_decode($comments['allcomments'][$z]['CreatedAt'])->Date->Year == date("Y") && json_decode($comments['allcomments'][$z]['CreatedAt'])->Date->NumericalMonth == date("m")){
-                                                            if(json_decode($comments['allcomments'][$z]['CreatedAt'])->Date->Year == date("Y") && json_decode($comments['allcomments'][$z]['CreatedAt'])->Date->NumericalMonth == date("m") && json_decode($comments['allcomments'][$z]['CreatedAt'])->Date->Day == date("d")){
-                                                                $hour;
+                                                    if(json_decode($comment[0]['CreatedAt'])->Date->Year == date("Y")){
+                                                        if(json_decode($comment[0]['CreatedAt'])->Date->Year == date("Y") && json_decode($comment[0]['CreatedAt'])->Date->NumericalMonth == date("m")){
+                                                            if(json_decode($comment[0]['CreatedAt'])->Date->Year == date("Y") && json_decode($comment[0]['CreatedAt'])->Date->NumericalMonth == date("m") && json_decode($comment[0]['CreatedAt'])->Date->Day == date("d")){
+                                                                $hour = date("H");
                                                                 if(date("H") > 12){
                                                                     $hour = date("H") - 12;
-                                                                    if(json_decode($comments['allcomments'][$z]['CreatedAt'])->Time->Hour == $hour){
-                                                                        if(json_decode($comments['allcomments'][$z]['CreatedAt'])->Time->Minutes == date("i")){
+                                                                    if(json_decode($comment[0]['CreatedAt'])->Time->Hour == $hour){
+                                                                        if(json_decode($comment[0]['CreatedAt'])->Time->Minutes == date("i")){
                                                                             echo "now";
                                                                         }
                                                                         else
                                                                         {
-                                                                            echo date("i") - json_decode($comments['allcomments'][$z]['CreatedAt'])->Time->Minutes . " min ago";
+                                                                            echo date("i") - json_decode($comment[0]['CreatedAt'])->Time->Minutes . " min ago";
                                                                             // echo json_decode($message['CreatedAt'])->Date->Day;
                                                                             // echo number_format(date("d"));
                                                                             // echo date("d");
@@ -791,24 +687,24 @@
                                                                     }
                                                                     else
                                                                     {
-                                                                        if($hour - json_decode($comments['allcomments'][$z]['CreatedAt'])->Time->Hour > 1){
-                                                                            echo $hour - json_decode($comments['allcomments'][$z]['CreatedAt'])->Time->Hour . " hours ago";
+                                                                        if($hour - json_decode($comment[0]['CreatedAt'])->Time->Hour > 1){
+                                                                            echo $hour - json_decode($comment[0]['CreatedAt'])->Time->Hour . " hours ago";
                                                                         }
                                                                         else
                                                                         {
-                                                                            echo $hour - json_decode($comments['allcomments'][$z]['CreatedAt'])->Time->Hour . " hour ago";
+                                                                            echo $hour - json_decode($comment[0]['CreatedAt'])->Time->Hour . " hour ago";
                                                                         }
                                                                     }
                                                                 }
                                                                 else
                                                                 {
-                                                                    if(json_decode($comments['allcomments'][$z]['CreatedAt'])->Time->Hour == date("H")){
-                                                                        if(json_decode($comments['allcomments'][$z]['CreatedAt'])->Time->Minutes == date("i")){
+                                                                    if(json_decode($comment[0]['CreatedAt'])->Time->Hour == date("H")){
+                                                                        if(json_decode($comment[0]['CreatedAt'])->Time->Minutes == date("i")){
                                                                             echo "now";
                                                                         }
                                                                         else
                                                                         {
-                                                                            echo date("i") - json_decode($comments['allcomments'][$z]['CreatedAt'])->Time->Minutes . " min ago";
+                                                                            echo date("i") - json_decode($comments[0]['CreatedAt'])->Time->Minutes . " min ago";
                                                                         }
                                                                         // var_dump(json_decode($message['CreatedAt'])->Time->Hour);
                                                                         // var_dump(json_decode($message['CreatedAt'])->Time->Minutes);
@@ -817,63 +713,63 @@
                                                                     }
                                                                     else
                                                                     {
-                                                                        if($hour - json_decode($comments['allcomments'][$z]['CreatedAt'])->Time->Hour > 1){
-                                                                            echo $hour - json_decode($comments['allcomments'][$z]['CreatedAt'])->Time->Hour . " hours ago";
+                                                                        if($hour - json_decode($comment[0]['CreatedAt'])->Time->Hour > 1){
+                                                                            echo $hour - json_decode($comment[0]['CreatedAt'])->Time->Hour . " hours ago";
                                                                         }
                                                                         else
                                                                         {
-                                                                            echo $hour - json_decode($comments['allcomments'][$z]['CreatedAt'])->Time->Hour . " hour ago";
+                                                                            echo $hour - json_decode($comment[0]['CreatedAt'])->Time->Hour . " hour ago";
                                                                         }
                                                                     }
                                                                 }
                                                             }
                                                             else
                                                             {
-                                                                if(number_format(date("d")) - json_decode($comments['allcomments'][$z]['CreatedAt'])->Date->Day >= 7){
+                                                                if(number_format(date("d")) - json_decode($comment[0]['CreatedAt'])->Date->Day >= 7){
                                                                     echo "1 week ago";
-                                                                } elseif(number_format(date("d")) - json_decode($comments['allcomments'][$z]['CreatedAt'])->Date->Day >= 14){
+                                                                } elseif(number_format(date("d")) - json_decode($comment[0]['CreatedAt'])->Date->Day >= 14){
                                                                     echo "2 weeks ago";
-                                                                } elseif(number_format(date("d")) - json_decode($comments['allcomments'][$z]['CreatedAt'])->Date->Day >= 21){
+                                                                } elseif(number_format(date("d")) - json_decode($comment[0]['CreatedAt'])->Date->Day >= 21){
                                                                     echo "3 weeks ago";
                                                                 }
                                                                 else
                                                                 {
-                                                                    if(number_format(date("d")) - json_decode($comments['allcomments'][$z]['CreatedAt'])->Date->Day > 1){
-                                                                        echo number_format(date("d")) - json_decode($comments['allcomments'][$z]['CreatedAt'])->Date->Day . " days ago";
+                                                                    if(number_format(date("d")) - json_decode($comment[0]['CreatedAt'])->Date->Day > 1){
+                                                                        echo number_format(date("d")) - json_decode($comment[0]['CreatedAt'])->Date->Day . " days ago";
                                                                     }
                                                                     else
                                                                     {
-                                                                        echo number_format(date("d")) - json_decode($comments['allcomments'][$z]['CreatedAt'])->Date->Day . " day ago";
+                                                                        echo number_format(date("d")) - json_decode($comment[0]['CreatedAt'])->Date->Day . " day ago";
                                                                     }
                                                                 }
                                                             }
                                                         }
                                                         else
                                                         {
-                                                            if(number_format(date("m")) - json_decode($comments['allcomments'][$z]['CreatedAt'])->Date->Month > 1){
-                                                                echo number_format(date("m")) - json_decode($comments['allcomments'][$z]['CreatedAt'])->Date->NumericalMonth . " months ago";
+                                                            if(number_format(date("m")) - json_decode($comment[0]['CreatedAt'])->Date->Month > 1){
+                                                                echo number_format(date("m")) - json_decode($comment[0]['CreatedAt'])->Date->NumericalMonth . " months ago";
                                                             }
                                                             else
                                                             {
-                                                                echo number_format(date("m")) - json_decode($comments['allcomments'][$z]['CreatedAt'])->Date->NumericalMonth . " month ago";
+                                                                echo number_format(date("m")) - json_decode($comment[0]['CreatedAt'])->Date->NumericalMonth . " month ago";
                                                             }
                                                         }
                                                     }
                                                     else
                                                     {
-                                                        if(number_format(date("Y")) - json_decode($comments['allcomments'][$z]['CreatedAt'])->Date->Year > 1){
-                                                            echo number_format(date("Y")) - json_decode($comments['allcomments'][$z]['CreatedAt'])->Date->Year . " years ago";
+                                                        if(number_format(date("Y")) - json_decode($comment[0]['CreatedAt'])->Date->Year > 1){
+                                                            echo number_format(date("Y")) - json_decode($comment[0]['CreatedAt'])->Date->Year . " years ago";
                                                         }
                                                         else
                                                         {
-                                                            echo number_format(date("Y")) - json_decode($comments['allcomments'][$z]['CreatedAt'])->Date->Year . " year ago";
+                                                            echo number_format(date("Y")) - json_decode($comment[0]['CreatedAt'])->Date->Year . " year ago";
                                                         }
                                                     }
 
                                                     
                                                     ?>
                                                                     </span>
-                                                                    <p class = dropdown-item > <?= $comments['allcomments'][$z]['Content'] ?> </p>
+                                                                    <p class = dropdown-item > <?= $comment[0]['Content'] ?> </p>
                                                                 </div>
                                                     <?php
                                                             }

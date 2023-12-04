@@ -109,31 +109,28 @@
                 }
             }
             $creation_details = array("Date" => $date, "Time" => $time);
-            if($message['IsMessage'] == 'FALSE'){
-                $query = "INSERT INTO Messages (Content, UserId, CreatedAt, UpdatedAt, SongId, PosterName, PosterPicUrl) VALUES(?,?,?,?,?,?,?)";
-                $values = array($message['Content'], $message['UserId'], json_encode($creation_details), json_encode($creation_details), $message['SongId'], $message['PosterName'], $message['PosterPicUrl']);
-                return $this->db->query($query, $values);
-            }
-            if($message['IsMessage'] == 'TRUE'){
-                $query = "INSERT INTO WallPosts (Content, PosterId, CreatedAt, UpdatedAt, UserId, PosterName, PosterPicUrl) VALUES(?,?,?,?,?,?,?)";
-                $values = array($message['Content'], $message['UserId'], json_encode($creation_details), json_encode($creation_details), $message['SongId'], $message['PosterName'], $message['PosterPicUrl']);
-                return $this->db->query($query, $values);
-            }
+            $query = "INSERT INTO Messages (Content, CreatedAt, UpdatedAt, Sender, UserBeingCommentedOn, SongBeingCommentedOn) VALUES(?,?,?,?,?,?)";
+            $values = array($message['Content'], json_encode($creation_details), json_encode($creation_details), $message['Sender'], $message['UserBeingCommentedOn'], $message['SongBeingCommentedOn']);
+            return $this->db->query($query, $values);
         }
-        function getMessages($songid)
-        {
-            return $this->db->query("SELECT * FROM Messages WHERE SongId=?", array($songid))->result_array();
+
+        function getMessageById($messageid){
+            return $this->db->query("SELECT * FROM Messages WHERE MessageId=?", array($messageid))->result_array();
         }
-        function getWallPosts($userid)
-        {
-            return $this->db->query("SELECT * FROM WallPosts WHERE UserId=?", array($userid))->result_array();
+
+        function getMessagesForSong($songid){
+            return $this->db->query("SELECT * FROM Messages WHERE SongBeingCommentedOn=?", array($songid))->result_array();
         }
-        function getMessage($messageid)
-        {
-            return $this->db->query("SELECT * FROM Messages WHERE MessageId=?", array($messageid))->row_array();
+
+        function getWallPosts($userid){
+            return $this->db->query("SELECT * FROM Messages WHERE UserBeingCommentedOn=?", array($userid))->result_array();
         }
-        function getWallPost($post_id)
-        {
+
+        function getMessageForUser($userid){
+            return $this->db->query("SELECT * FROM Messages WHERE UserBeingCommentedOn=?", array($messageid))->row_array();
+        }
+
+        function getWallPost($post_id){
             return $this->db->query("SELECT * FROM WallPosts WHERE PostId=?", array($post_id))->row_array();
         }
     }

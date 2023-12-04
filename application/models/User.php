@@ -46,5 +46,9 @@
             $this->db->where('UserId', $userid);
             return $this->db->update('Users');
         }
+
+        function delete($userid) {
+            $this->db->query("DELETE FROM Users WHERE UserId = ?", array($userid));
+        }
     }
 ?>

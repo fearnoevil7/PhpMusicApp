@@ -58,6 +58,15 @@
         <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
     </head>
     <body>
+        <?php
+            // for($x = 0; $x < count($loggedUser['pendingrequests']); $x++){
+            //     // var_dump($loggedUser['pendingrequests'][$x]['Sender']);
+            //     // var_dump($x);
+            // }
+            // var_dump($loggedUser['pendingrequests']);
+            // var_dump($loggedUser['sentRequests']);
+            // var_dump($loggedUser['receivedRequests']);
+        ?>
         <div class="container-fluid">
             <div class="row">
                 <!-- sidebar -->
@@ -123,7 +132,7 @@
                             </div>
                             <div class="list-group-item list-group-item-action text-uppercase">
                                 <i class="fas fa-broadcast-tower" style="color: #ced0ce;"></i>
-                                <form  action="/Song/getStation" method="POST" style="display: inline-block; margin: 0px 0px 0px 7px;">
+                                <form  action="/Station" method="GET" style="display: inline-block; margin: 0px 0px 0px 7px;">
                                     <input type="hidden" name="Station" value= "20">
                                     <input id="getArtistbutton2" type="submit" value="Rap">
                                 </form>
@@ -327,95 +336,52 @@
                                 </div>
                                 <div class="modal-body">
                                     <div id="carouselExampleControls" class="carousel slide" data-ride="carousel">
-                                    <div class="carousel-inner">
+                                        <div class="carousel-inner">
+                                        <h1>Received Requests</h1>
                                         <?php
-                                        for($e=0; $e < count($loggedUser['pendingrequests']); $e++){
-                                            if( $e == 0 ) {
-                                                if($loggedUser['pendingrequests'][$e]['Sender']['UserId'] == $this->session->userdata('UserId')) {
+                                            for($e=0; $e < count($loggedUser['receivedRequests']); $e++){
                                         ?>
-                                                    <div class="carousel-item active">
-                                                        
-                                                        <img style="border-radius: 7px;" class="d-block w-100" src=<?= $loggedUser['pendingrequests'][$e]['Receiver']['ProfilePicUrl'] ?> >
-                                                        <div class="waffles3">
-                                                            <a class="waffles2" <?php echo "href = /user/show/" . $loggedUser['pendingrequests'][$e]['Receiver']['UserId'] ?>  ><button class="btn btn-primary">View Profile</button></a>
-                                                            <form class="friendrequestbutton" <?php echo "action = declineRequest/" . $this->session->userdata('UserId') . "/" . $loggedUser['pendingrequests'][$e]['Receiver']['UserId']?>  method="POST">
-                                                                <input type="hidden" name="boolean" value="TRUE" />
-                                                                <input type="submit" value="Cancel Request" />
-                                                            </form>
-                                                        </div>
-                                                    </div>
-                                        <?php
-                                                } else
-                                                if($loggedUser['pendingrequests'][$e]['Receiver']['UserId'] == $this->session->userdata('UserId')) {
-                                        ?>
-                                                <div class="carousel-item active">
-                                                    <img style="border-radius: 7px;" class="d-block w-100" src=<?= $loggedUser['pendingrequests'][$e]['Sender']['ProfilePicUrl'] ?> >
-                                                    <div class="waffles3">
-                                                        <a <?php echo "href = /user/show/" . $loggedUser['pendingrequests'][$e]['Sender']['UserId'] ?>  ><button class="buttonize btn btn-primary" class="btn btn-secondary">View Profile</button></a>
-                                                        <form class="friendrequestbutton" <?php echo "action = confirmRequest/" . $this->session->userdata('UserId') . "/" . $loggedUser['pendingrequests'][$e]['Sender']['UserId']?>  method="POST">
-                                                            <input type="hidden" name="boolean" value="TRUE" />
-                                                            <input class="btn btn-success" type="submit" value="Accept" />
-                                                        </form>
-                                                        <form class="friendrequestbutton" <?php echo "action = declineRequest/" . $this->session->userdata('UserId') . "/" . $loggedUser['pendingrequests'][$e]['Sender']['UserId']; ?> method="POST">
-                                                            <input type="hidden" name="boolean" value="FALSE" />
-                                                            <input class="btn btn-danger" type="submit" value="Decline" />
-                                                        </form>
-                                                    </div>
+                                            <div class="carousel-item active">
+                                                
+                                                <img style="border-radius: 7px;" class="d-block w-100" src=<?= $loggedUser['receivedRequests'][$e]['ProfilePicUrl'] ?> >
+                                                <div class="waffles3">
+                                                    <a class="waffles2" <?php echo "href = /user/show/" . $loggedUser['receivedRequests'][$e]['UserId'] ?>  ><button class="btn btn-primary">View Profile</button></a>
+                                                    <form class="friendrequestbutton" <?php echo "action = declineRequest/" . $this->session->userdata('UserId') . "/" . $loggedUser['receivedRequests'][$e]['UserId']?>  method="POST">
+                                                        <input type="hidden" name="boolean" value="TRUE" />
+                                                        <input type="submit" value="Accept Request" />
+                                                    </form>
                                                 </div>
+                                            </div>
+                                        
                                         <?php
-                                                }
-                                        ?>
-
-                                        <?php
-                                            } else {
-                                                if($loggedUser['pendingrequests'][$e]['Sender']['UserId'] == $this->session->userdata('UserId')) {
-                                                    ?>
-                                                    <div class="carousel-item">
-                                                        <img style="border-radius: 7px;" class="d-block w-100" src=<?= $loggedUser['pendingrequests'][$e]['Receiver']['ProfilePicUrl'] ?> >
-                                                        <div class="waffles3">
-                                                            <a <?php echo "href = /user/show/" . $loggedUser['pendingrequests'][$e]['Receiver']['UserId'] ?>  ><button class="btn btn-primary">View Profile</button></a>
-                                                            <form class="friendrequestbutton" <?php echo "action = confirmRequest/" . $this->session->userdata('UserId') . "/" . $loggedUser['pendingrequests'][$e]['Sender']['UserId']?>  method="POST">
-                                                                <input type="hidden" name="boolean" value="TRUE" />
-                                                                <input class="btn btn-success" type="submit" value="Accept" />
-                                                            </form>
-                                                        <form class="friendrequestbutton" <?php echo "action = declineRequest/" . $this->session->userdata('UserId') . "/" . $loggedUser['pendingrequests'][$e]['Receiver']['UserId']?>  method="POST">
-                                                            <input type="hidden" name="boolean" value="TRUE" />
-                                                            <input class="btn btn-danger" type="submit" value="Cancel Request" />
-                                                        </form>
-                                                        </div>
-                                                    </div>
-                                                    <?php
-                                                }
-                                                if($loggedUser['pendingrequests'][$e]['Receiver']['UserId'] == $this->session->userdata('UserId')) {
-                                                ?>
-                                                    <div class="carousel-item">
-                                                        <img style="border-radius: 7px;" class="d-block w-100 userprofilepic" src=<?= $loggedUser['pendingrequests'][$e]['Sender']['ProfilePicUrl'] ?> >
-                                                        <div class="waffles3">
-                                                            <a <?php echo "href = /user/show/" . $loggedUser['pendingrequests'][$e]['Sender']['UserId'] ?>  ><button class="btn btn-primary">View Profile</button></a>
-                                                            <form class="friendrequestbutton" <?php echo "action = confirmRequest/" . $this->session->userdata('UserId') . "/" . $loggedUser['pendingrequests'][$e]['Sender']['UserId']?>  method="POST">
-                                                                <input type="hidden" name="boolean" value="TRUE" />
-                                                                <input class="btn btn-success" type="submit" value="Accept" />
-                                                            </form>
-                                                            <form class="friendrequestbutton" <?php echo "action = declineRequest/" . $this->session->userdata('UserId') . "/" . $loggedUser['pendingrequests'][$e]['Sender']['UserId']; ?> method="POST">
-                                                                <input type="hidden" name="boolean" value="FALSE" >
-                                                                <input class="btn btn-danger" type="submit" value="Decline" >
-                                                            </form>
-                                                        </div>
-                                                    </div>
-                                                <?php
-                                                }
                                             }
                                         ?>
-                                            <!-- <div class="carousel-item">
-                                            <img class="d-block w-100" src="..." alt="Second slide">
-                                            </div>
-                                            <div class="carousel-item">
-                                            <img class="d-block w-100" src="..." alt="Third slide">
-                                            </div> -->
-                                            <?php
-                                        }
+
+                                            
+                                                <!-- <div class="carousel-item">
+                                                <img class="d-block w-100" src="..." alt="Second slide">
+                                                </div>
+                                                <div class="carousel-item">
+                                                <img class="d-block w-100" src="..." alt="Third slide">
+                                                </div> -->
+                                        </div>
+                                        <h1>Sent Requests</h1>
+                                        <?php 
+                                            for($e=0; $e < count($loggedUser['sentRequests']); $e++){
                                         ?>
-                                    </div>
+                                            <div class="carousel-item active">  
+                                                <img style="border-radius: 7px;" class="d-block w-100" src=<?= $loggedUser['sentRequests'][$e]['ProfilePicUrl'] ?> >
+                                                <div class="waffles3">
+                                                    <a class="waffles2" <?php echo "href = /user/show/" . $loggedUser['sentRequests'][$e]['UserId'] ?>  ><button class="btn btn-primary">View Profile</button></a>
+                                                    <form class="friendrequestbutton" <?php echo "action = declineRequest/" . $this->session->userdata('UserId') . "/" . $loggedUser['sentRequests'][$e]['UserId']?>  method="POST">
+                                                        <input type="hidden" name="boolean" value="TRUE" />
+                                                        <input type="submit" value="Cancel Request" />
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        <?php
+                                            }
+                                        ?>
                                     <!-- <a class="carousel-control-prev" href="#carouselExampleControls" role="button" data-slide="prev">
                                         <span class="carousel-control-prev-icon" aria-hidden="true"></span>
                                         <span class="sr-only">Previous</span>
@@ -588,7 +554,7 @@
                             </div>
                             
                         </div>
-                        <div class="soundWaveAnimation">
+                        <!-- <div class="soundWaveAnimation">
                             <div class="wrapper">
                                 <div></div>
                                 <div></div>
@@ -613,7 +579,7 @@
                                 <div></div>
                                 <div></div>
                             </div>
-                        </div>
+                        </div> -->
                     </div>
 
                 </div>

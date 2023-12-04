@@ -13,19 +13,6 @@
             var_dump($this->input->post('profilepic'));
 
 
-
-            $this->load->helper('string');
-            $config['upload_path'] = "./assets/images/";
-            $config['remove_spaces'] = TRUE;
-            $config['allowed_types'] = 'jpeg|jpg|png';
-            $filename = str_replace(' ', '', $_FILES['profilepic']['name']);
-            $config['file_name'] = $filename;
-            $this->load->library('upload', $config);
-            $this->upload->initialize($config);
-            $this->upload->do_upload('profilepic');
-
-
-
             $this->load->model("User");
             $errors = array();
             if(empty($this->input->post('FirstName'))){
@@ -47,6 +34,17 @@
                 $errors[] = "Email must be a valid email address!";
             }
             if(count($errors) == 0){
+               
+                $this->load->helper('string');
+                $config['upload_path'] = "./assets/profilePictures/";
+                $config['remove_spaces'] = TRUE;
+                $config['allowed_types'] = 'jpeg|jpg|png';
+                $filename = str_replace(' ', '', $_FILES['profilepic']['name']);
+                $config['file_name'] = $filename;
+                $this->load->library('upload', $config);
+                $this->upload->initialize($config);
+                $this->upload->do_upload('profilepic');
+
                 $Salt = bin2hex(openssl_random_pseudo_bytes(22));
                 $EncryptedPassword = md5($this->input->post('Password') . '' . $Salt);
                 $user_details = array(
@@ -55,15 +53,36 @@
                     'Email' => $this->input->post('Email'),
                     'Password' => $EncryptedPassword,
                     'Salt' => $Salt,
-                    'ProfilePicUrl' => "/assets/images/" . $_FILES['profilepic']['name'],
+                    'ProfilePicUrl' => "/assets/profilePictures/" . $filename,
                 );
                 $registered_user = $this->User->CreateUser($user_details);
-                if($registered_user == true)
-                {
-                    redirect('http://localhost:8888/');
+                if($registered_user == true) {
+                    $signin_details = array(
+                        "Email" => $this->input->post('Email'),
+                        "Password" => $this->input->post("Password"),
+                    );
+                    $logged_user = $this->User->Login($signin_details);
+
+                    if($logged_user == true){
+                        $EncryptedPassword = md5($this->input->post("Password") . '' . $logged_user['Salt']);
+                        if($logged_user['Password'] == $EncryptedPassword){
+                            $this->session->set_userdata('UserId', $logged_user['UserId']);
+
+                            $this->load->model('Playlist_Model');
+                            $this->Playlist_Model->Create("Likes", $logged_user['UserId']);
+                            
+                            redirect('http://localhost:8888/dashboard/' . $this->session->userdata('UserId'));
+                        }
+                        else
+                        {
+                            $this->session->set_flashdata('EncryptPassCheck', 'Password is not correct!');
+                            redirect('http://localhost:8888/');
+                        }
+                    }
                 }
                 else
                 {
+                    $this->session->set_flashdata('Error', 'Could not create user.');
                     redirect('http://localhost:8888/');
                 }
             }
@@ -75,6 +94,7 @@
             }
             // redirect('http://localhost:8888/');
         }
+        
         public function login(){
             $this->load->model("User");
             $errors = array();
@@ -90,6 +110,7 @@
                     "Password" => $this->input->post("Password"),
                 );
                 $logged_user = $this->User->Login($signin_details);
+
                 if($logged_user == true){
                     $EncryptedPassword = md5($this->input->post("Password") . '' . $logged_user['Salt']);
                     if($logged_user['Password'] == $EncryptedPassword){
@@ -118,44 +139,52 @@
                 redirect('http://localhost:8888/');
             }
         }
+        
         public function user_dashboard($Id){
             $this->load->model('User');
             $this->load->model('Song_Model');
             $this->load->model('Like_Model');
+            $this->load->model('Friend_Model');
             $user = $this->User->Show($Id);
             $songs = $this->Song_Model->get_All_Songs();
             $likes = $this->Like_Model->getUsersLikes($this->session->userdata('UserId'));
+
+            $pendingRequests = $this->Friend_Model->getPendingFriendRequests($user);
             $playlist = array();
             $friends = array();
-            // var_dump($likes);
+
             for($i = 0; $i < count($likes); $i++){
                 $track = $this->Song_Model->get_song_by_id($likes[$i]['SongId']);
                 array_push($playlist, $track);
-                // var_dump($likes[$i]['SongId']);
             }
-            $unwrappedFriendsList = json_decode($user['FriendsList']);
-            $unwrappedRequests = json_decode($user['PendingFriendRequests'], true);
-            $decodedFriendRequests = array();
-            if($unwrappedRequests != null){
-                for($x = 0; $x < count($unwrappedRequests); $x++){
-                    $requestReceiver = $this->User->Show($unwrappedRequests[$x]['RequestReceiverId']);
-                    $requestSender = $this->User->Show($unwrappedRequests[$x]['RequestSenderId']);
-                    $request = array("Sender" => $requestSender, "Receiver" => $requestReceiver);
-                    array_push($decodedFriendRequests, $request);
+
+            $unwrappedFriendsList = NULL;
+            $pendingSentRequests = array();
+            $pendingReceivedRequests = array();
+            
+            // Getting all users who sent friend requests to this user.
+            for($i = 0; $i < count($pendingRequests); $i++){
+                if($pendingRequests[$i]['Sender'] == $user['UserId']){
+                    // Users the logged in user has sent requests to.
+                    $receipient = $this->User->Show($pendingRequests[$i]['Receiver']);
+                    array_push($pendingSentRequests, $receipient);
+                } else {
+                    // Users who've sent requests to logged in user.
+                    $sender = $this->User->Show($pendingRequests[$i]['Sender']);
+                    array_push($pendingReceivedRequests, $sender);
                 }
             }
-            if($unwrappedFriendsList != null){
-                for($z = 0; $z < count($unwrappedFriendsList); $z++){
-                    $friend = $this->User->Show($unwrappedFriendsList[$z]);
-                    array_push($friends, $friend);
-                }
-            }
+
+            
+
             $view_data['loggedUser'] = array(
                 'IdNumber' => $user['UserId'],
                 'FirstName' => $user['FirstName'],
                 'LastName' => $user['LastName'],
                 'Email' => $user['Email'],
-                'pendingrequests' => $decodedFriendRequests,
+                'pendingrequests' => $pendingRequests,
+                'sentRequests' => $pendingSentRequests,
+                'receivedRequests' => $pendingReceivedRequests,
                 'friends' => $friends,
                 'user' => $user,
                 'likes' => $likes,
@@ -170,16 +199,48 @@
             $this->load->view('Home/dashboard', $view_data);
 
         }
+
         public function show($Id){
             $this->load->model('Song_Model');
             $this->load->model('Like_Model');
             $this->load->model('Message_Model');
             $this->load->model('User');
             $this->load->model('Comment_Model');
+            $this->load->model('Friend_Model');
             $user = $this->User->Show($Id);
             $logged_user  = $this->User->Show($this->session->userdata('UserId'));
-            $messages = $this->Message_Model->getWallPosts($Id);
-            $comments = $this->Comment_Model->getAllWallPostComments();
+            $packaged_messages = $this->Message_Model->getWallPosts($Id);
+            $comments = $this->Comment_Model->getAllWallPostComments($Id);
+
+            $messages = array();
+
+            for($i = 0; $i < count($packaged_messages); $i++){
+
+                $message = array();
+                $message_sender = $this->User->Show($packaged_messages[$i]['Sender']);
+                array_push($message, $packaged_messages[$i]);
+                array_push($message, $message_sender);
+
+                $packaged_comments = [$this->Comment_Model->commentsBelongingToMessage($packaged_messages[$i]['MessageId'])];
+                $comments = array();
+
+                for($x = 0; $x < count($packaged_comments); $x++){
+                    $comment = array();
+                    array_push($comment, $packaged_comments[$x]);
+
+                    $commentPoster = $this->User->Show($packaged_comments[$x]['PosterId']);
+                    array_push($comment, $commentPoster);
+
+                    array_push($comments, $comment);
+                }
+
+
+                array_push($message, $comments);
+
+                array_push($messages, $message);
+
+            };
+
             $playlist = array();
             $likes = $this->Like_Model->getUsersLikes($Id);
             for($i = 0; $i < count($likes); $i++){
@@ -187,41 +248,22 @@
                 array_push($playlist, $track);
                 // var_dump($likes[$i]['SongId']);
             }
-            $friends = array();
+            $pendingRequests = $this->Friend_Model->getPendingFriendRequests($user);
+            
+            $friends = $this->Friend_Model->getUserFriendsList($Id);
             $DisplayedUserFriendsList = array();
             $decodedFriendRequests = array();
-            $unwrappedFriendsList = json_decode($logged_user['FriendsList']);
-            $unwrappedRequests = json_decode($logged_user['PendingFriendRequests'], true);
-            $DisplayedUserUnwrappedFriendsList = json_decode($user['FriendsList']);
-            if($unwrappedRequests != null){
-                for($x = 0; $x < count($unwrappedRequests); $x++){
-                    $requestReceiver = $this->User->Show($unwrappedRequests[$x]['RequestReceiverId']);
-                    $requestSender = $this->User->Show($unwrappedRequests[$x]['RequestSenderId']);
-                    $request = array("Sender" => $requestSender, "Receiver" => $requestReceiver);
-                    array_push($decodedFriendRequests, $request);
-                }
-            }
-            if($unwrappedFriendsList != null){
-                for($z = 0; $z < count($unwrappedFriendsList); $z++){
-                    $friend = $this->User->Show($unwrappedFriendsList[$z]);
-                    array_push($friends, $friend);
-                }
-            }
-            if($DisplayedUserUnwrappedFriendsList != null){
-                for($r = 0; $r < count($DisplayedUserUnwrappedFriendsList); $r++){
-                    $friend = $this->User->Show($DisplayedUserUnwrappedFriendsList[$r]);
-                    array_push($DisplayedUserFriendsList, $friend);
-                }
-            }
+
             $view_data['loggedUser'] = array(
                 'IdNumber' => $logged_user['UserId'],
                 'FirstName' => $logged_user['FirstName'],
                 'LastName' => $logged_user['LastName'],
                 'Email' => $logged_user['Email'],
-                'pendingrequests' => $decodedFriendRequests,
+                'pendingrequests' => $pendingRequests,
                 'friends' => $friends,
                 'user' => $logged_user,
-                'Url' => $logged_user['ProfilePicUrl']
+                'Url' => $logged_user['ProfilePicUrl'],
+                'messages' => $messages,
                 // 'likes' => $userlikes,
             );
             $view_data['messages4song'] = array(
@@ -235,234 +277,23 @@
                 'Friends' => $DisplayedUserFriendsList,
                 'Playlist' => $playlist,
             );
-            $view_data['comments'] = array(
-                'allcomments' => $comments,
-            );
             $this->load->view('Home/wall', $view_data);
         }
 
 
-        public function sendFriendRequest($userid, $prospectfriendid)
+        public function sendFriendRequest($userid, $possibleFriendId)
         {
-            $this->load->model('User');
-            $user = $this->User->Show($prospectfriendid);
-            $sender = $this->User->Show($this->session->userdata('UserId'));
-            $friendslist = json_decode($user['FriendsList']);
-            $friendrequests = json_decode($user['PendingFriendRequests'], true);
-            $senderrequests = json_decode($sender['PendingFriendRequests'], true);
-            // for($i = 0; $i < count($friendslist); $i++){
-            //     if($friendslist[$i] == $this->session->userdata('UserId')){
-            //         redirect('http://localhost:8888/user/show/' . $prospectfriendid);
-            //     }
-            // }
-            if($friendrequests != null){
-                for($q = 0; $q < count($friendrequests); $q++){
-                    if($friendrequests[$q]['RequestSenderId'] == $prospectfriendid && $friendrequests[$q]['RequestReceiverId'] == $this->session->userdata('UserId') || $friendrequests[$q]['RequestSenderId'] == $this->session->userdata('UserId') & $friendrequests[$q]['RequestReceiverId'] == $prospectfriendid){
-                        redirect('http://localhost:8888/user/show/' . $prospectfriendid);
-                    }
-                }
-                $requestDetails = array("RequestSenderId" => $this->session->userdata('UserId'), "RequestReceiverId" => $prospectfriendid);
-                array_push($friendrequests, $requestDetails);
-                $request = $this->User->sendRequest($prospectfriendid, $friendrequests);
-            } else {
-                $friendrequests2 = array();
-                $requestDetails = array("RequestSenderId" => $this->session->userdata('UserId'), "RequestReceiverId" => $prospectfriendid);
-                array_push($friendrequests2, $requestDetails);
-                $request = $this->User->sendRequest($prospectfriendid, $friendrequests2);
-            }
-
-
-
-
-            if($senderrequests != null){
-                for($q = 0; $q < count($senderrequests); $q++){
-                    if($friendrequests[$q]['RequestSenderId'] == $prospectfriendid && $friendrequests[$q]['RequestReceiverId'] == $this->session->userdata('UserId') || $friendrequests[$q]['RequestSenderId'] == $this->session->userdata('UserId') && $friendrequests[$q]['RequestReceiverId'] == $prospectfriendid){
-                        redirect('http://localhost:8888/user/show/' . $prospectfriendid);
-                    }
-                }
-                $requestDetails = array("RequestSenderId" => $this->session->userdata('UserId'), "RequestReceiverId" => $prospectfriendid);
-                array_push($senderrequests, $requestDetails);
-                $request = $this->User->sendRequest($this->session->userdata('UserId'), $senderrequests);
-            } else {
-                $senderrequests2 = array();
-                $requestDetails = array("RequestSenderId" => $this->session->userdata('UserId'), "RequestReceiverId" => $prospectfriendid);
-                array_push($senderrequests2, $requestDetails);
-                $request = $this->User->sendRequest($this->session->userdata('UserId'), $senderrequests2);
-            }
-            // $this->session->userdata('test1', $friendrequests);
-
-
-            // for($i = 0; $i < count($friendrequests); $i++){
-            // }
-            redirect('http://localhost:8888/user/show/' . $prospectfriendid);
         }
-        public function acceptFriendRequest($userid, $prospectfriendid)
+
+        public function processIncomingRequests($userid, $possibleFriendId, $decision) // sender, receiver, yes or no accept request
         {
-            $this->load->Model('User');
-            $user = $this->User->Show($prospectfriendid);
-            $logged_user = $this->User->Show($this->session->userdata('UserId'));
-            $friendrequests = json_decode($logged_user['PendingFriendRequests'], TRUE);
-            $senderFriendsrequests = json_decode($user['PendingFriendRequests'], TRUE);
-            $friendslist = json_decode($logged_user['FriendsList']);
-            $senderFriendsList = json_decode($user['FriendsList']);
-            // array_push($senderFriendsList, $this->session->userdata('UserId'));
-            // $confirmed_request2 = $this->User->confirmRequest($prospectfriendid, $senderFriendsList);
-            // $this->session->set_userdata('arraytest', $this->session->userdata('UserId'));
-            if($friendrequests != null){
-                for($q = 0; $q < count($friendrequests); $q++){
-                    if($friendrequests[$q]['RequestSenderId'] == $prospectfriendid && $friendrequests[$q]['RequestReceiverId'] == $this->session->userdata('UserId')){
-                        $temp = $friendrequests[$q];
-                        $friendrequests[$q] = $friendrequests[count($friendrequests) - 1];
-                        $friendrequests[count($friendrequests) - 1] = $temp;
-                    }
-                    array_pop($friendrequests);
-                    
-                }
-                
-            }
-            else
-            {
-                redirect('http://localhost:8888/dashboard/' . $this->session->userdata('UserId'));
-            }
-            if($senderFriendsrequests != null){
-                for($q = 0; $q < count($senderFriendsrequests); $q++){
-                    if($senderFriendsrequests[$q]['RequestSenderId'] == $prospectfriendid && $senderFriendsrequests[$q]['RequestReceiverId'] == $this->session->userdata('UserId')){
-                        $temp = $senderFriendsrequests[$q];
-                        $senderFriendsrequests[$q] = $senderFriendsrequests[count($senderFriendsrequests) - 1];
-                        $senderFriendsrequests[count($senderFriendsrequests) - 1] = $temp;
-                        
-                    }
-                    array_pop($senderFriendsrequests);
-                    
-                }
-                
-            }
-            else
-            {
-                redirect('http://localhost:8888/dashboard/' . $this->session->userdata('UserId'));
-            }
-
-
-
-            if($senderFriendsList == null){
-                $senderFriendsList = array();
-                array_push($senderFriendsList, $this->session->userdata('UserId'));
-                $confirmed_request = $this->User->confirmRequest($prospectfriendid, $senderFriendsList);
-                $remove_from_pendingRequests = $this->User->sendRequest($prospectfriendid, $senderFriendsrequests);
-            }
-            else
-            {
-                array_push($senderFriendsList, $this->session->userdata('UserId'));
-                $confirmed_request = $this->User->confirmRequest($prospectfriendid, $senderFriendsList);
-                $remove_from_pendingRequests = $this->User->sendRequest($prospectfriendid, $senderFriendsrequests);
-            }
-            if($friendslist != null){
-                for($q = 0; $q < count($friendslist); $q++){
-                    if($friendslist[$q] == $prospectfriendid){
-                        redirect('http://localhost:8888/dashboard/' . $this->session->userdata('UserId'));
-                    }
-                }
-                array_push($friendslist, $prospectfriendid);
-                $confirmed_request = $this->User->confirmRequest($this->session->userdata('UserId'), $friendslist);
-                $remove_from_pendingRequests = $this->User->sendRequest($this->session->userdata('UserId'), $friendrequests);
-                // redirect('http://localhost:8888/dashboard/' . $this->session->userdata('UserId'));
-            } 
-            else
-            {
-                $friendslist2 = array();
-                array_push($friendslist2, $prospectfriendid);
-                $confirmed_request = $this->User->confirmRequest($this->session->userdata('UserId'), $friendslist2);
-                $remove_from_pendingRequests = $this->User->sendRequest($this->session->userdata('UserId'), $friendrequests);
-                // redirect('http://localhost:8888/dashboard/' . $this->session->userdata('UserId'));
-            }
-            
+            $this->load->Model('FriendModel');
+            $logged_user = $this->User->Show($userid);
             
             redirect('http://localhost:8888/dashboard/' . $this->session->userdata('UserId'));
 
+        }
 
-            // if($this->input->post('boolean') == 'FALSE'){
-            //     if($friendrequests != null){
-            //         for($q = 0; $q < count($friendrequests); $q++){
-            //             if($friendrequests[$q] == $prospectfriendid){
-            //                 $temp = $friendrequests[$q];
-            //                 $friendrequests[$q] = $friendrequests[count($friendrequests) - 1];
-            //                 $friendrequests[count($friendrequests) - 1] = $temp;
-            //             }
-            //             array_pop($friendrequests);
-            //         }
-            //     }
-            //     else
-            //     {
-            //         redirect('http://localhost:8888/dashboard/' . $this->session->userdata('UserId'));
-            //     }
-            //     $remove_request = $this->User->sendRequest($this->session->userdata('UserId'), $friendrequests);
-            //     redirect('http://localhost:8888/dashboard/' . $this->session->userdata('UserId'));
-            // }
-        }
-        public function declineFriendRequest($userid, $prospectfriendid)
-        {
-            $this->load->Model('User');
-            $logged_user = $this->User->Show($this->session->userdata('UserId'));
-            $receiver = $this->User->Show($prospectfriendid);
-            $receiver_requests = json_decode($receiver['PendingFriendRequests'], true);
-            $friendrequests = json_decode($logged_user['PendingFriendRequests'], true);
-            if($friendrequests != null){
-                for($q = 0; $q < count($friendrequests); $q++){
-                    if($this->input->post('boolean') == 'FALSE'){
-                        if($friendrequests[$q]['RequestSenderId'] == $prospectfriendid && $friendrequests[$q]['RequestReceiverId'] == $this->session->userdata('UserId')){
-                            $temp = $friendrequests[$q];
-                            $friendrequests[$q] = $friendrequests[count($friendrequests) - 1];
-                            $friendrequests[count($friendrequests) - 1] = $temp;
-                        }
-                    }
-                    else
-                    {
-                        if($this->input->post('boolean') == 'TRUE'){
-                            if($friendrequests[$q]['RequestReceiverId'] == $prospectfriendid && $friendrequests[$q]['RequestSenderId'] == $this->session->userdata('UserId')){
-                                $temp = $friendrequests[$q]; 
-                                $friendrequests[$q] = $friendrequests[count($friendrequests) - 1];
-                                $friendrequests[count($friendrequests) - 1] = $temp;
-                            }
-                        }
-                    }
-                    $this->session->set_userdata('arraytest3', $prospectfriendid);
-                    array_pop($friendrequests);
-                    $this->session->set_userdata('arraytest', $friendrequests[count($friendrequests) - 1]);
-                }
-            }
-            else
-            {
-                redirect('http://localhost:8888/dashboard/' . $this->session->userdata('UserId'));
-            }
-            if($receiver_requests != null){
-                for($x = 0; $x < count($receiver_requests); $x++){
-                    if($this->input->post('boolean') == 'FALSE'){
-                        if($receiver_requests[$x]['RequestSenderId'] == $prospectfriendid && $receiver_requests[$x]['RequestReceiverId'] == $this->session->userdata('UserId')){
-                            $temp = $receiver_requests[$x];
-                            $receiver_requests[$x] = $receiver_requests[count($receiver_requests) - 1];
-                            $receiver_requests[count($receiver_requests) - 1] = $temp;
-                        }
-                    }
-                    else
-                    {
-                        if($this->input->post('boolean') == 'TRUE'){
-                            if($receiver_requests[$x]['RequestReceiverId'] == $this->session->userdata('UserId') && $receiver_requests[$x]['RequestSenderId'] == $prospectfriendid){
-                                $temp = $receiver_requests[$x]; 
-                                $receiver_requests[$x] = $receiver_requests[count($receiver_requests) - 1];
-                                $receiver_requests[count($receiver_requests) - 1] = $temp;
-                            }
-                        }
-                    }
-                    $this->session->set_userdata('arraytest5', $prospectfriendid);
-                    array_pop($receiver_requests);
-                    $this->session->set_userdata('arraytest7', $receiver_requests[count($receiver_requests) - 1]);
-                }
-            }
-            $this->session->set_userdata('arraytest2', $this->input->post('boolean'));
-            $remove_request = $this->User->sendRequest($this->session->userdata('UserId'), $friendrequests);
-            $remove_request2 = $this->User->sendRequest($prospectfriendid, $receiver_requests);
-            redirect('http://localhost:8888/dashboard/' . $this->session->userdata('UserId'));
-        }
         public function edit(){
             $this->load->model('User');
             $decodedFriendRequests = array();
@@ -576,6 +407,33 @@
                 $this->session->set_flashdata('profilepicupdateresult', "failed to update profile pic");
                 redirect('http://localhost:8888/edit');
             }
+        }
+        
+        public function deleteUser() {
+            $this->load->model('Playlist_Model');
+            $this->load->model('Song_Model');
+            $this->load->model('Like_Model');
+            $this->load->model('User');
+
+            $playlists = $this->Playlist_Model->getUserPlaylists($this->session->userdata('UserId'));
+            
+            if($playlists && count($playlists) > 0) {
+                for($x = 0; $x < count($playlists) - 1; $x++) {
+                    $this->Playlist_Model->deleteAllTracksFromPlaylist($playlists[$x]['PlaylistId']);
+                }
+            }
+
+            $playlists = $this->Playlist_Model->deleteUsersPlaylists($this->session->userdata('UserId'));
+
+            $likes = $this->Like_Model->deleteAllOfUserLikes($this->session->userdata('UserId'));
+
+            $songs = $this->Song_Model->deleteAllSongsUploadedByUser($this->session->userdata('UserId'));
+
+            $user = $this->User->delete($this->session->userdata('UserId'));
+            
+            // $user = $this->User->Show($this->session->userdata('UserId'));
+            redirect('http://localhost:8888/');
+            // var_dump(array("UserId" => $this->session->userdata('UserId'), "Response" => $user ));
         }
     }
 

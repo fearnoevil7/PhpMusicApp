@@ -6,83 +6,92 @@
             $this->load->model('User');
             $this->load->model('Like_Model');
             $user = $this->User->Show($this->session->userdata('UserId'));
-            $likes = $this->Like_Model->getUsersLikes($this->session->userdata('UserId'));
-            $friends = array();
-            $decodedFriendRequests = array();
-            $unwrappedFriendsList = json_decode($user['FriendsList']);
-            $unwrappedRequests = json_decode($user['PendingFriendRequests'], true);
-            if($unwrappedRequests != null){
-                for($x = 0; $x < count($unwrappedRequests); $x++){
-                    $requestReceiver = $this->User->Show($unwrappedRequests[$x]['RequestReceiverId']);
-                    $requestSender = $this->User->Show($unwrappedRequests[$x]['RequestSenderId']);
-                    $request = array("Sender" => $requestSender, "Receiver" => $requestReceiver);
-                    array_push($decodedFriendRequests, $request);
-                }
-            }
-            if($unwrappedFriendsList != null){
-                for($z = 0; $z < count($unwrappedFriendsList); $z++){
-                    $friend = $this->User->Show($unwrappedFriendsList[$z]);
-                    array_push($friends, $friend);
-                }
-            }
+
             $view_data['loggedUser'] = array(
                 'IdNumber' => $user['UserId'],
                 'FirstName' => $user['FirstName'],
                 'LastName' => $user['LastName'],
                 'Email' => $user['Email'],
-                'pendingrequests' => $decodedFriendRequests,
-                'friends' => $friends,
                 'user' => $user,
-                'likes' => $likes,
             );
             $this->load->view('Song/New', $view_data);
         }
-        public function Create()
-        {
+
+        public function uploadSong() {
             $this->load->helper('string');
             $config['upload_path'] = "./assets/uploads/";
             $config['remove_spaces'] = TRUE;
             $config['allowed_types'] = 'mp4|m4a|mp3|jpeg|jpg';
-            $song_name = str_replace(' ', '', $_FILES['song']['name']);
+            $fileName = explode(".", $_FILES['song']['name']);
+
+            // create file extension
+            $file_extension = "." . $fileName[count($fileName) - 1];
+            unset($fileName[count($fileName) - 1]);
+            $fileName = implode("", $fileName);
+
+            // remove special characters from fileName
+            $fileName = preg_replace('/[^a-zA-Z0-9_ -]/s','',$fileName);
+            //  remove whitespace
+            $fileName = preg_replace('/\s+/', '', $fileName);
+
+            $song_name =  $fileName . $file_extension;
+
             $config['file_name'] = $song_name;
             $this->load->library('upload', $config);
             // $this->upload->do_upload('song');
             $this->upload->initialize($config);
             $this->upload->do_upload('song');
-            // if(! $this->upload->do_upload('song')){
-            //     $error = array('error' => $this->upload->display_errors());
-            //     $this->session->set_flashdata('errors', $error);
-            //     redirect('http://localhost:8888/song/new');
-            // }
-            // else
-            // {
-            //     $data = array('upload_data' => $this->upload->data());
-            //     redirect('http://localhost:8888/song/new');
-            // }
-            // $target_dir = "../assets/songs/";
-            // $target_file = $target_dir . basename($_FILES["Song"]["name"]);
-            // $songFileType = strtolower(pathinfo($target_file, PATHINFO_EXTENSION));
-            // $FILE_NAME = $_FILES['Song']['name'];
-            // $file_tmp = $_FILES['ProfilePic']['tmp_name'];
-            // move_uploaded_file($_FILES['Song']['tmp_name'], $target_file);
-            // redirect('http://localhost:8888/');
-            $this->load->model("Song_Model");
-            $song_details = array(
-                'Name' => $this->input->post('Name'),
-                'Artist' => $this->input->post('Artist'),
-                'Url' => "/assets/uploads/" . $song_name,
-                'UserId' => $this->session->userdata('UserId'),
-            );
-            $added_song = $this->Song_Model->AddSong($song_details);
-                if($added_song == true)
-                {
-                    redirect('http://localhost:8888/dashboard/' . $this->session->userdata('UserId'));
-                }
-                else
-                {
-                    redirect('http://localhost:8888/upload/' . $this->session->userdata('UserId'));
-                }
+            return $song_name;
         }
+
+        public function Create()
+        {
+            $data;
+            if($this->input->post() != NULL) {
+                $data = $_POST;
+                // echo $data['Name']
+            } else {
+                header("Content-Type: application/json");
+                $data = json_decode(file_get_contents("php://input"));
+                // echo $data->Name;
+            }
+
+            $this->load->model("Song_Model");
+            $match;
+            $this->input->post() ? $match = $this->Song_Model->getSongsByName($data['Name'], $data['Artist']) : $match = $this->Song_Model->getSongsByName($data->Name, $data->Artist);
+
+            if($match) {
+                if($this->input->post()) {
+                    $this->session->set_flashdata('Error', 'The song is present in database.');
+                    redirect('http://localhost:8888/upload/' . $this->session->userdata('UserId'));
+                } else {
+                    echo json_encode(array("Song" => $match));
+                }
+            } else {
+                $song_details = array(
+                    'Name' => $this->input->post() ? $data['Name'] : $data->Name,
+                    'Artist' => $this->input->post() ? $data['Artist'] : $data->Artist,
+                    'Url' => $this->input->post() ? "/assets/uploads/" . $this->uploadSong() : $data->Url,
+                    'UploaderId' => $this->input->post() ? $this->session->userdata('UserId') : NULL,
+                    'AlbumTitle' => $this->input->post() ? NULL : $data->AlbumTitle,
+                    'PictureUrl' => $this->input->post() ? NULL : $data->Picture,
+                    'ApiUrl' => $this->input->post() ? NULL : $data->ApiUrl
+                );
+    
+                $added_song = $this->Song_Model->AddSong($song_details);
+                if($this->input->post()) {
+                    if($added_song == true) {
+                        redirect('http://localhost:8888/dashboard/' . $this->session->userdata('UserId'));
+                    }
+                    else {
+                        redirect('http://localhost:8888/upload/' . $this->session->userdata('UserId'));
+                    }
+                } else {
+                    echo json_encode(array("Song" => $this->input->post() ? $match = $this->Song_Model->getSongsByName($data['Name'], $data['Artist']) : $match = $this->Song_Model->getSongsByName($data->Name, $data->Artist)));
+                }
+            }     
+        }
+
         public function Show($cancionId)
         {
             $this->load->model('Song_Model');
@@ -360,6 +369,15 @@
                 }
                 redirect('http://localhost:8888/Artist/');
             }
+        }
+
+        public function getSongByName($name, $artist) {
+            $this->load->model("Song_Model");
+            // Certain characters are not allowed to be passed through the url so the parameters had to converted to base64 then urlencoded.
+            $song = $this->Song_Model->getSongsByName(base64_decode(urldecode($name)), base64_decode(urldecode($artist)));
+            // $details = array("Name" => base64_decode(urldecode($name)), "Artist" => base64_decode(urldecode($artist)));
+
+            echo json_encode($song);
         }
     }
 ?>

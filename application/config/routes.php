@@ -58,10 +58,13 @@ $route['dashboard/(:any)'] = "Home/user_dashboard/$1";
 $route['song/new'] = "Song/new";
 $route['upload/(:any)'] = "Song/new/(:any)";
 $route['song/show/(:any)'] = "Song/Show/$1";
-$route['create'] = "Song/create";
-$route['like/create/(:any)/(:any)'] = "Like/Create/$1/$2";
+$route['songs/show/(:any)/(:any)'] = "Song/getSongByName/$1/$2";
+$route['song/add'] = "Song/Create";
+$route['like/create'] = "Like/Create";
+$route['likes/test'] = "Like/Test";
+
 $route['dislike/(:any)/(:any)'] = "Like/Destroy/$1/$2";
-$route['post/(:ant)/(:any)'] = "Message/Create/$1/$2";
+$route['post/(:any)/(:any)'] = "Message/Create/$1/$2";
 $route['user/show/(:any)'] = "Home/show/$1";
 $route['sendFriendRequest/(:any)/(:any)'] = "Home/sendFriendRequest/$1/$2";
 $route['song/show/comment/(:any)/(:any)/(:any)'] = "Comment/Create/$1/$2/$3";
@@ -74,6 +77,13 @@ $route['Station'] = "Station/RadioStation";
 $route['edit'] = "Home/edit";
 $route['signout'] = "Home/logout";
 $route['update'] = 'Home/update';
+$route['user/delete'] = "Home/deleteUser";
 $route['update/password'] = 'Home/updatePassword';
 $route['update/profilepicture'] = 'Home/updateProfilePic';
+
+$route['playlist/create/(:any)'] = 'Playlist/Create/$1';
+$route['playlist/delete/(:any)'] = 'Playlist/Delete/$1';
+$route['playlist/pin/(:any)/(:any)'] = 'Playlist/Pin/$1/$2';
+
+$route['deezer'] = "Station/receiveURL";
 

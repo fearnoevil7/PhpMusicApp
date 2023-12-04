@@ -1,7 +1,7 @@
 <?php
     defined('BASEPATH') OR exit('No direct script access allowed');
     class Message extends CI_Controller {
-        public function Create($userid, $songid)
+        public function Create($userid, $id)
         {
             $this->load->model("Message_Model");
             $this->load->model("User");
@@ -12,27 +12,30 @@
                 $errors[] = "Message must have content with a length of atleast 3 characters.";
             }
             if(count($errors) == 0){
-                $message_details = array(
-                    "Content" => $this->input->post('Content'),
-                    "UserId" => $userid,
-                    "CreatedAt" => date("Y-m-d, H:i"),
-                    "UpdatedAt" => date("Y-m-d, H:i"),
-                    "SongId" => $songid,
-                    "PosterName" => "" . $user['FirstName'] . " " . $user['LastName'],
-                    "PosterPicUrl" => "" . $user['ProfilePicUrl'],
-                    "IsMessage" => $this->input->post('MessageTypeBoolean'),
-                );
-                // if($this->input->post('MessageTypeBoolean') == 'TRUE'){
-                //     $message_details['SongId'] = 
-                // }
+                if($this->input->post('whatIsBeingCommentedOn') == 'TRUE') {
+                    // If $whatIsBeingCommentedOn variable returns 'TRUE' then it is a user being commented on else it is a song being commented on.
+                    $message_details = array(
+                        "Content" => $this->input->post('Content'),
+                        "Sender" => $userid,
+                        "CreatedAt" => date("Y-m-d, H:i"),
+                        "UpdatedAt" => date("Y-m-d, H:i"),
+                        "UserBeingCommentedOn" => $id,
+                        "SongBeingCommentedOn" => NULL,
+                    );
+                } else {
+                    $message_details = array(
+                        "Content" => $this->input->post('Content'),
+                        "Sender" => $userid,
+                        "CreatedAt" => date("Y-m-d, H:i"),
+                        "UpdatedAt" => date("Y-m-d, H:i"),
+                        "UserBeingCommentedOn" => NULL,
+                        "SongBeingCommentedOn" => $id,
+                    );
+                }
+
                 $created_message = $this->Message_Model->PostMessage($message_details);
-                var_dump($songid);
-                redirect('http://localhost:8888/song/show/' . $songid);
             }
-            else
-            {
-                redirect('http://localhost:8888/song/show/' . $songid);
-            }
+            redirect('http://localhost:8888/user/show/' . $userid);
         }
     }
 ?>

@@ -22,7 +22,8 @@
                     // var_dump($test['test']);
                     // if($this->session->userdata('test') != null){
                     //     var_dump($this->session->userdata('test'));
-                    // }
+                    // }'
+                    // var_dump($_SESSION);
                 ?>
                 <?php
                     if($this->session->flashdata('EncryptPassCheck') != null){
@@ -50,8 +51,8 @@
                 <input type="text" name="FirstName" placeholder="First Name"/>
                 <input type="text" name="LastName" placeholder="Last Name"/>
                 <input type="text" name="Email" placeholder="Email"/>
-                <input type="text" name="Password" placeholder="Password"/>
-                <input type="text" name="ConfirmPassword" placeholder="Confirm Password"/>
+                <input type="password" name="Password" placeholder="Password" autocomplete="off"/>
+                <input type="password" name="ConfirmPassword" placeholder="Confirm Password" autocomplete="off"/>
                 <p><u>Upload Profile Pic(optional)</u></p>
                 <input type="file" name="profilepic" />
                 <button style="margin: 25px 0px 25px 0px; border-radius: 20px;">Sign Up</button>
@@ -67,7 +68,7 @@
                 </div>
                 <span>or use your account</span>
                 <span>Email: </span><input type="text" name="Email" placeholder="Email"/>
-                <span>Password</span><input type="text" name="Password" placeholder="Password"/>
+                <span>Password</span><input type="password" name="Password" placeholder="Password" autocomplete="off"/>
                 <a href="#">Forgot your password?</a>
                 <button style="margin: 25px 0px 0px 0px; border-radius: 20px;">Sign In</button>
             </form>

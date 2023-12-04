@@ -426,7 +426,7 @@
                                     </div>
                                 </h4>
                                 <div style=" width: 450px; height: 300px; margin: 25px 0px 0px 232px;">
-                                    <form action="create" method="POST" enctype="multipart/form-data">
+                                    <form enctype="multipart/form-data" action="Create" method="POST">
                                         <div class="form-group">
                                             <span>Name </span><input class="form-control" style="display: block; margin: 16px 0px 0px 0px;" type="text" name="Name" />
                                         </div>

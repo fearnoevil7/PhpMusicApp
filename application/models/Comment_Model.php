@@ -109,18 +109,11 @@
                 }
             }
             $creation_details = array("Date" => $date, "Time" => $time);
-            if($comment['IsWallPostComment'] == 'FALSE'){
-                $query = "INSERT INTO Comments (Content, MessageId, PosterId, CreatedAt, UpdatedAt, PersonBeingCommentedOnName, PosterName, PosterPicUrl) VALUES(?,?,?,?,?,?,?,?)";
-                $values = array($comment['Content'], $comment['MessageId'], $comment['PosterId'], json_encode($creation_details), json_encode($creation_details), $comment['PersonBeingCommentedOnName'], $comment['PosterName'], $comment['PosterPicUrl']);
-                return $this->db->query($query, $values);
-            }
-            if($comment['IsWallPostComment'] == 'TRUE'){
-                $query = "INSERT INTO PostComments (Content, WallPostId, PosterId, CreatedAt, UpdatedAt, PersonBeingCommentedOnName, PosterName, PosterPicUrl) VALUES(?,?,?,?,?,?,?,?)";
-                $values = array($comment['Content'], $comment['MessageId'], $comment['PosterId'], json_encode($creation_details), json_encode($creation_details), $comment['PersonBeingCommentedOnName'], $comment['PosterName'], $comment['PosterPicUrl']);
-                return $this->db->query($query, $values);
-            }
+            $query = "INSERT INTO Comments (MessageId, PosterId, Content, CreatedAt, UpdatedAt) VALUES(?,?,?,?,?)";
+            $values = array($comment['MessageId'], $comment['PosterId'], $comment['Content'], json_encode($creation_details), json_encode($creation_details));
+            return $this->db->query($query, $values);
         }
-        function getMessageComments($messageid)
+        function CommentsBelongingToMessage($messageid)
         {
             return $this->db->query("SELECT * FROM Comments WHERE MessageId=?", array($messageid)) -> row_array();
         }
@@ -128,9 +121,9 @@
         {
             return $this->db->query("SELECT * FROM Comments")->result_array();
         }
-        function getAllWallPostComments()
+        function getAllWallPostComments($userid)
         {
-            return $this->db->query("SELECT * FROM PostComments")->result_array();
+            return $this->db->query("SELECT * FROM Comments WHERE MessageId=?", array($userid))->result_array();
         }
     }
 ?>

@@ -1,0 +1,606 @@
+<?php  header("Access-Control-Allow-Origin: *"); ?>
+<!doctype html>
+<html lang="en">
+    <head>
+        <title></title>
+        <!-- Required meta tags -->
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+        <link rel="stylesheet" href="/assets/css/StationView.css">
+
+        <!-- Font Awesome -->
+        <script defer src="/assets/fontawesome-free-5.13.0-web/js/all.js"></script>
+
+        <!-- Bootstrap CSS -->
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+        <script>
+            const numberOfTracksInAlbum = async(url) => {
+                let album = await makeAPIcall(url)
+
+                return album.length;
+            }
+
+            function makeAPIcall(url, requestBody){
+                const body = {
+                    url: url
+                };
+
+
+                return new Promise(function(resolve, reject){
+                    $.post("http://localhost:8888/deezer", body, (data, status) => {
+                })
+                    .done(function(data){
+                        resolve(data);
+                    })
+                    .fail(function(error) {
+                        reject(error)
+                    })
+                    .always(function() {
+                        console.log("API call has Finished.");
+                    });
+                });
+            }
+
+
+            function getAlbum(url, title, cover, name){
+
+                name ? name : name = "";
+
+                const body = {
+                    url: url,
+                    title: title,
+                    cover: cover,
+                    name: name
+                };
+
+                console.log(body);
+
+                let sidebar_top = document.querySelector('.sidebar div');
+
+                makeAPIcall(url).then(function(data){
+
+                    let tracks = data;
+
+                    localStorage.setItem("selectedAlbum", JSON.stringify(tracks));
+                    localStorage.setItem("albumCover", cover);
+
+
+                    setSelectedSong(0);
+
+                    // the song variable is declared in the customaudio&volume_interfaces.js file
+                    song.src = tracks[0]["preview"]
+
+                    let menuItem = document.querySelectorAll('.menuItem')[4];
+                    if(menuItem != null){
+                        menuItem.innerHTML = "";
+                    } else {
+                        menuItem = document.createElement("div");
+                        menuItem.classList.add("menuItem");
+
+                        $(sidebar_top).append(menuItem);
+                    }
+
+                    let nowPlayingSection = `
+                            <p>${title ? title : name}</p>
+                            <img onclick="playPause()" src="${cover}" />
+                        `;
+                    $(menuItem).append(nowPlayingSection);
+
+                    let tracklist = document.createElement("div");
+                    tracklist.classList.add("tracklist");
+
+                    for(let x = 0; x < tracks.length; x++){
+                        // tracks[x]['title'].length > 20 ? console.log("test: " + tracks[x]['title'].substring(0, 20).concat("...")) : "title is under the maximum allowed length";
+                        if(tracks[x]['preview']){
+                            let track = document.createElement("div");
+
+                            let trackDetails = `
+                                <span>${x + 1}</span>
+                                <div>
+                                    <p>${tracks[x]['title'].length > 23 ? tracks[x]['title'].substring(0, 23).trimEnd().concat("...") : tracks[x]['title']}</p>
+                                    <span id="trackDetailsToolTip"></span>
+                                </div>
+                                <p>${body.title ? tracks[x]['artist']['name'] : tracks[x]['artist']['name'] == body.name ? tracks[x]['album']['title'] : tracks[x]['artist']['name']}</p>
+                            `;
+
+
+                            $(track).append(trackDetails);
+                            track.classList.add("track");
+
+                            let toolTip = document.getElementById('trackDetailsToolTip');
+                            let wrapper = track.querySelector('div');
+                            let element = track.querySelector('p');
+
+                            if(tracks[x]['title'].length > 23){
+                                wrapper.id = "longTitle";
+
+                                console.log("This: ", track.querySelector('p'));
+
+                                element.onmouseover = function(e){
+
+                                    console.log("Entering mouseover title tooltip function.", toolTip);
+
+                                    setTimeout(function(){
+                                        console.log("title: ", tracks[x]['title']);
+
+                                        console.log("Width: " + window.innerWidth + " Height: " + window.innerHeight);
+                                        console.log("e: ", e)
+                                        console.log("Y: ", e.clientY);
+                                        console.log("X: ", e.clientX);
+
+                                        console.log("Percentage Y: " + (e.clientY * 100) / window.innerHeight + "%");
+                                        console.log("Percentage X: " + (e.clientX * 100) / window.innerWidth + "%");
+
+
+                                        toolTip.innerHTML = tracks[x]['title'];
+                                        toolTip.style.display = "inline";    
+                                        toolTip.style.top = ((e.clientY * 100) / window.innerHeight + 4) + "%";
+                                        toolTip.style.left = ((e.clientX * 100) / window.innerWidth + 24)+ "%";
+                                    }, 500)                          
+                                };
+
+                                element.onmouseleave = function(e){
+                                    toolTip.style.display = "none";
+                                };
+                            }
+                            
+                            $(tracklist).append(track);
+                            $(menuItem).append(tracklist);
+
+                            track.addEventListener("click", function(){
+                                let currentTrackName = document.querySelectorAll(".MusicPlayer .left div p")[0];
+                                let currentTrackArtist = document.querySelectorAll(".MusicPlayer .left div p")[1];
+
+                                let picture = document.querySelector(".MusicPlayer .left img");
+
+                                let audioElement = document.getElementById("song");
+
+                                setSelectedSong(x);
+
+                                keepPlaying();
+                            });
+                        }
+                    };
+
+                }).catch(function(error){
+                    console.log("API call to get album failed.");
+                })
+            }
+
+            function playAudio(id){
+                document.querySelectorAll('audio')[id].play();
+                document.querySelectorAll('.playButton')[id].style.setProperty('display', 'none');
+
+                document.querySelectorAll('.pauseButton')[id].style.setProperty('display', 'inline');
+                document.querySelectorAll('audio')[id].addEventListener('ended', function() {
+                    document.querySelectorAll('.playButton')[id].style.setProperty('display', 'inline');
+
+                    document.querySelectorAll('.pauseButton')[id].style.setProperty('display', 'none');
+                });
+            };
+
+            function pauseAudio(id){
+                document.querySelectorAll('audio')[id].pause();
+                document.querySelectorAll('.playButton')[id].style.setProperty('display', 'inline');
+
+                document.querySelectorAll('.pauseButton')[id].style.setProperty('display', 'none');
+            };
+        </script>
+
+    </head>
+
+    <body style="background: black; color: #a3a3a3">
+    <?php
+
+        // var_dump($DeezerApi['artists']);
+
+        // $count = 1;
+        // // foreach($DeezerApi['playlists'] as $artist){
+        // //     echo "<p style='color: blue;'>$count podcast !!!!!!!!!!!!!!!</p>";
+        // //     var_dump($artist);
+        // //     $count++;
+        // // }
+
+        // $count = 1;
+        // foreach($DeezerApi['playlists'] as $test){
+        //     echo "<p style='color: blue;'>First Level: $count Index !!!!!!!!!!!!!!!</p>";
+        //     $count++;
+        //     var_dump($test);
+        //     $count2 = 1;
+        //     foreach($test as $minitest){
+        //         echo "<p style='color: red;'>Second Level: $count2 Index !!!!!!!!!!!!!!!</p>";
+        //         $count2++;
+        //         var_dump($minitest);
+        //         $count3 = 1;
+        //         foreach($minitest as $tinytest){
+        //             echo "<p style='color: green;'>Third Level: $count3 Index !!!!!!!!!!!!!!!</p>";
+        //             $count3++;
+        //             var_dump($tinytest);
+        //         }
+        //     }
+        // }
+    ?>  
+
+        <div class="sidebar">
+            <div>
+                <div class="menuItem">
+                    <svg xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 576 512">
+                        <path d="M575.8 255.5c0 18-15 32.1-32 32.1h-32l.7 160.2c0 2.7-.2 5.4-.5 8.1V472c0 22.1-17.9 40-40 40H456c-1.1 0-2.2 0-3.3-.1c-1.4 .1-2.8 .1-4.2 .1H416 392c-22.1 0-40-17.9-40-40V448 384c0-17.7-14.3-32-32-32H256c-17.7 0-32 14.3-32 32v64 24c0 22.1-17.9 40-40 40H160 128.1c-1.5 0-3-.1-4.5-.2c-1.2 .1-2.4 .2-3.6 .2H104c-22.1 0-40-17.9-40-40V360c0-.9 0-1.9 .1-2.8V287.6H32c-18 0-32-14-32-32.1c0-9 3-17 10-24L266.4 8c7-7 15-8 22-8s15 2 21 7L564.8 231.5c8 7 12 15 11 24z"/>
+                    </svg>
+                    <h5>Home</h5>
+                </div>
+
+                <div class="menuItem">
+                    <svg  xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 512 512">
+                        <path d="M288 109.3V352c0 17.7-14.3 32-32 32s-32-14.3-32-32V109.3l-73.4 73.4c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3l128-128c12.5-12.5 32.8-12.5 45.3 0l128 128c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L288 109.3zM64 352H192c0 35.3 28.7 64 64 64s64-28.7 64-64H448c35.3 0 64 28.7 64 64v32c0 35.3-28.7 64-64 64H64c-35.3 0-64-28.7-64-64V416c0-35.3 28.7-64 64-64zM432 456a24 24 0 1 0 0-48 24 24 0 1 0 0 48z"/>
+                    </svg>
+                    <h5>Upload</h5>
+                </div>
+
+                <div class="menuItem">
+                    <div>
+                        <svg xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 448 512">
+                            <path d="M96 0C43 0 0 43 0 96V416c0 53 43 96 96 96H384h32c17.7 0 32-14.3 32-32s-14.3-32-32-32V384c17.7 0 32-14.3 32-32V32c0-17.7-14.3-32-32-32H384 96zm0 384H352v64H96c-17.7 0-32-14.3-32-32s14.3-32 32-32zm32-240c0-8.8 7.2-16 16-16H336c8.8 0 16 7.2 16 16s-7.2 16-16 16H144c-8.8 0-16-7.2-16-16zm16 48H336c8.8 0 16 7.2 16 16s-7.2 16-16 16H144c-8.8 0-16-7.2-16-16s7.2-16 16-16z"/>
+                        </svg>
+                        <h5>Your Library</h5>
+                    </div>
+                    <svg xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 448 512">
+                        <path d="M256 80c0-17.7-14.3-32-32-32s-32 14.3-32 32V224H48c-17.7 0-32 14.3-32 32s14.3 32 32 32H192V432c0 17.7 14.3 32 32 32s32-14.3 32-32V288H400c17.7 0 32-14.3 32-32s-14.3-32-32-32H256V80z"/>
+                    </svg>
+                </div>
+                <div class="menuItem">
+                    <h6>Playlists</h6>
+                    <div>
+                        <button>
+                            <svg xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 512 512" fill="#6e6e6e">
+                                <path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352a144 144 0 1 0 0-288 144 144 0 1 0 0 288z"/>
+                            </svg>
+                        </button>
+                        <button>
+                            <svg xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 512 512">
+                                <path d="M40 48C26.7 48 16 58.7 16 72v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V72c0-13.3-10.7-24-24-24H40zM192 64c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zm0 160c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zm0 160c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zM16 232v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V232c0-13.3-10.7-24-24-24H40c-13.3 0-24 10.7-24 24zM40 368c-13.3 0-24 10.7-24 24v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V392c0-13.3-10.7-24-24-24H40z"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="playlistsContainer"></div>
+                </div>
+                <!-- <div class="menuItem">
+                    <p>Agora Hills</p>
+                    <img src="https://e-cdns-images.dzcdn.net/images/cover/aea5d295972a673a994d88a82fb8e83c/500x500-000000-80-0-0.jpg" />
+                    <div class="tracklist">
+                        <div>
+                            <span>1</span>
+                            <p>Paint the Town Red</p>
+                            <p>Doja Cat</p>
+                        </div>
+                    </div>
+                </div> -->
+            </div>
+        </div>
+        
+
+        <div class="main">
+            <div class="navBar">
+                <!-- <button>
+                    <svg class="mobileViewNavDropDown" xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 448 512" fill="#939393">
+                        <path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/>
+                    </svg>
+                </button> -->
+                <button onclick="showSearchBar()">
+                    <svg xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 512 512" fill="#6e6e6e">
+                        <path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352a144 144 0 1 0 0-288 144 144 0 1 0 0 288z"/>
+                    </svg>
+                </button>
+                <input type="text" id="searchBar" placeholder=" Search artist, album, track..."/>
+
+                <h4 style="visibility: hidden;">Home</h4>
+
+                <div class="right">
+                    <button>
+                        
+                        <svg xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 448 512">
+                            <path d="M304 128a80 80 0 1 0 -160 0 80 80 0 1 0 160 0zM96 128a128 128 0 1 1 256 0A128 128 0 1 1 96 128zM49.3 464H398.7c-8.9-63.3-63.3-112-129-112H178.3c-65.7 0-120.1 48.7-129 112zM0 482.3C0 383.8 79.8 304 178.3 304h91.4C368.2 304 448 383.8 448 482.3c0 16.4-13.3 29.7-29.7 29.7H29.7C13.3 512 0 498.7 0 482.3z"/>
+                        </svg>
+                    </button>
+
+                    <button>
+                        <svg class="notificationSVG" xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 448 512" fill="#ecedec">
+                            <path d="M224 0c-17.7 0-32 14.3-32 32V51.2C119 66 64 130.6 64 208v18.8c0 47-17.3 92.4-48.5 127.6l-7.4 8.3c-8.4 9.4-10.4 22.9-5.3 34.4S19.4 416 32 416H416c12.6 0 24-7.4 29.2-18.9s3.1-25-5.3-34.4l-7.4-8.3C401.3 319.2 384 273.9 384 226.8V208c0-77.4-55-142-128-156.8V32c0-17.7-14.3-32-32-32zm45.3 493.3c12-12 18.7-28.3 18.7-45.3H224 160c0 17 6.7 33.3 18.7 45.3s28.3 18.7 45.3 18.7s33.3-6.7 45.3-18.7z"/>
+                        </svg>
+                    </button>
+                    <div class="notificationAlert">
+                        <span>2</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="genreContainer">
+                <div class="genreScrollMenu">
+            <?php
+                $numberOfRadioStations = count($DeezerApi['RadioStations']);
+                echo
+                "<script>
+                    let root = document.querySelector(':root');
+                    let numberOfRadioStations;
+
+                    '$numberOfRadioStations' % 2 == 1 ?
+                        numberOfRadioStations = Math.ceil('$numberOfRadioStations' / 2)
+                        :
+                        numberOfRadioStations = '$numberOfRadioStations' / 2;
+                    
+                    console.log(numberOfRadioStations);
+                    root.style.setProperty('--test', numberOfRadioStations);
+                </script>";
+
+                foreach($DeezerApi['RadioStations'] as $genre){ ?>
+                <div onClick="getAlbum(this.getAttribute('data-url'), this.getAttribute('data-title'), this.getAttribute('data-radioCover'))" data-url='<?php echo $genre['tracklist'] ?>' data-title='<?php echo $genre['title'] ?>' data-radioCover='<?php echo $genre['picture_big'] ?>'>
+                    <img class="radioPic" src='<?php echo $genre["picture_medium"] ?>' />
+                    <p class="radioTitle">
+                        <?php echo $genre["title"] ?>
+                    </p>
+                    <button class="radioButton">
+                        <svg xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 512 512">
+                            <path d="M494.8 47c12.7-3.7 20-17.1 16.3-29.8S494-2.8 481.2 1L51.7 126.9c-9.4 2.7-17.9 7.3-25.1 13.2C10.5 151.7 0 170.6 0 192v4V304 448c0 35.3 28.7 64 64 64H448c35.3 0 64-28.7 64-64V192c0-35.3-28.7-64-64-64H218.5L494.8 47zM368 240a80 80 0 1 1 0 160 80 80 0 1 1 0-160zM80 256c0-8.8 7.2-16 16-16h96c8.8 0 16 7.2 16 16s-7.2 16-16 16H96c-8.8 0-16-7.2-16-16zM64 320c0-8.8 7.2-16 16-16H208c8.8 0 16 7.2 16 16s-7.2 16-16 16H80c-8.8 0-16-7.2-16-16zm16 64c0-8.8 7.2-16 16-16h96c8.8 0 16 7.2 16 16s-7.2 16-16 16H96c-8.8 0-16-7.2-16-16z"/>
+                        </svg>
+                    </button>
+                </div>
+            <?php
+            }
+            ?>
+                </div>
+            </div>
+
+            <br>
+            <br>
+            <br>
+
+            <h4>Trending Tracks</h4>
+            <br>
+            <div class="tracksScrollMenu">
+            <?php
+            $index = 0;
+            foreach($DeezerApi['tracks'] as $track){
+                // var_dump($track);
+                // echo "<p style='color: blue;'>$count Track !!!!!!!!!!!!!!!</p>";
+                // $preview = $track[0]['preview'];
+                // echo "$preview";
+            ?>
+                <div>
+                    <div class="top">
+                        <div class="left">
+                            <img src="<?php echo $track['track']['artist']['picture_medium'] ?>" data-url="<?php echo $track['track']['artist']['tracklist'] ?>" data-artistName="<?php echo $track['track']['artist']['name'] ?>" data-artistPicture="<?php echo $track['track']['artist']['picture_big'] ?>" onClick="getAlbum(this.getAttribute('data-url'), null, this.getAttribute('data-artistPicture'), this.getAttribute('data-artistName'))" />
+                        </div>
+                        <div class="right">
+                            <p><?php echo $track['track']['artist']['name'] ?></p>
+                            
+                        <?php
+                            $title = $track['track']['album']['title'];
+                            if($track['numberOfTracksInAlbum'] > 1){
+                                echo "<a>$title</a>";
+                            } else {
+                                echo "<p>$title</p>";
+                            }
+                        ?>
+                        </div>
+                    </div>
+                    <div class="bottom" id="tracksScrollMenuBottom">
+                        <div class="left">
+                            <img <?php if($track['numberOfTracksInAlbum'] > 1) {echo "class='albumCover' onClick='getAlbum(this.getAttribute(`data-url`), this.getAttribute(`data-albumTitle`), this.getAttribute(`data-albumCover`), this.getAttribute(`data-artistName`))'";} ?> src="<?php echo $track['track']['album']['cover_medium'] ?>" data-url='<?php echo $track['track']['album']['tracklist'] ?>' data-albumTitle='<?php echo $track['track']['album']['title']?>' data-albumCover='<?php echo $track['track']['album']['cover_big']?>' data-artistName='<?php echo $track['track']['artist']['name']?>' />
+                        </div>
+                        <div class="right">
+                            <p><?php echo $track['track']['title'] ?></p>
+                            <?php
+                                $numberOfTracksInAlbumTracklist = $track['numberOfTracksInAlbum'];
+                                if($track['numberOfTracksInAlbum'] > 1){
+                                    echo "<p style='font-size: x-small;'>Album &emsp; $numberOfTracksInAlbumTracklist songs</p>";
+                                } else {
+                                    echo "<p style='font-size: x-small;'>Single</p>";
+                                }
+                            ?>
+
+                            <div>
+                                <svg class="likeButton" xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 512 512">
+                                    <path d="M47.6 300.4L228.3 469.1c7.5 7 17.4 10.9 27.7 10.9s20.2-3.9 27.7-10.9L464.4 300.4c30.4-28.3 47.6-68 47.6-109.5v-5.8c0-69.9-50.5-129.5-119.4-141C347 36.5 300.6 51.4 268 84L256 96 244 84c-32.6-32.6-79-47.5-124.6-39.9C50.5 55.6 0 115.2 0 185.1v5.8c0 41.5 17.2 81.2 47.6 109.5z"/>
+                                </svg>
+                                <audio>
+                                    <source type="audio/mpeg" src="<?php echo $track['track']['preview'] ?>">
+                                </audio>
+                                <button class="playButton" onClick="playAudio(<?php echo $index ?>)">
+                                    <svg class="playButtonSvg" xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 384 512" fill="white">
+                                        <path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/>
+                                    </svg>
+                                </button>
+                                <button class="pauseButton" onClick="pauseAudio(<?php echo $index?>)">
+                                    <svg class="pauseButtonSvg" xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 320 512" fill="white">
+                                        <path d="M48 64C21.5 64 0 85.5 0 112V400c0 26.5 21.5 48 48 48H80c26.5 0 48-21.5 48-48V112c0-26.5-21.5-48-48-48H48zm192 0c-26.5 0-48 21.5-48 48V400c0 26.5 21.5 48 48 48h32c26.5 0 48-21.5 48-48V112c0-26.5-21.5-48-48-48H240z"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            <?php
+            $index++;
+            }
+            ?>
+            </div>
+
+            <h4>Hottest Albums</h4>
+
+            <div class="albumScrollMenu">
+            <?php foreach($DeezerApi['albums'] as $album){ ?>
+
+                <div class="container">
+                    <img onClick='getAlbum(this.getAttribute("data-url"), this.getAttribute("data-albumTitle"), this.getAttribute("data-albumCover"), this.getAttribute("data-albumArtistName"))' src="<?php echo $album['cover_medium'] ?>" data-url="<?php echo $album['tracklist'] ?>" data-albumCover="<?php echo $album['cover_big'] ?>" data-albumTitle="<?php echo $album['title'] ?>" data-albumArtistName="<?php echo $album['artist']['name'] ?>"/>
+                    <div>
+                        <p class="title"><?php echo $album['title'] ?></p>
+                        <p><?php echo $album['artist']['name'] ?></p>
+                    </div>
+                </div>
+
+            <?php } ?>
+            </div>
+            
+            <br>
+
+            <h4>Popular Artists</h4>
+            <div class="artistScrollMenu">
+            <?php foreach($DeezerApi['artists'] as $artist){ ?>
+
+                <div>
+                    <img src="<?php echo $artist['picture_big'] ?>"  onClick="getAlbum(this.getAttribute('data-url'), null, this.getAttribute('data-artistPicture'), this.getAttribute('data-artistName'))" data-url='<?php echo $artist['tracklist'] ?>' data-artistName='<?php echo $artist['name'] ?>' data-artistPicture='<?php echo $artist['picture_big']?>'/>
+                    <p><?php echo $artist['name'] ?></p>
+                </div>
+
+            <?php } ?>
+            </div>
+
+            <br>
+            <br>
+
+            <h4>Recommended Playlists</h4>
+
+            <div class="albumScrollMenu">
+            <?php foreach($DeezerApi['playlists'] as $playlist){ ?>
+
+                <div class="container">
+                    <img src="<?php echo $playlist['picture_medium'] ?>" onClick="getAlbum(this.getAttribute('data-url'), this.getAttribute('data-playlistTitle'), this.getAttribute('data-playlistPicture'), this.getAttribute('data-playlistCreator'))" data-url='<?php echo $playlist['tracklist'] ?>' data-playlistTitle='<?php echo $playlist['title'] ?>' data-playlistPicture='<?php echo $playlist['picture_big']?>' data-playlistCreator='<?php echo $playlist['user']['name']?>' />
+                    <p class="title"><?php echo $playlist['title'] ?></p>
+                    <p><?php echo $playlist['user']['name'] ?></p>
+                </div>
+
+            <?php } ?>
+            </div>
+        </div>
+
+        <div class="MusicPlayer">    
+            <!-- Left -->
+            <div class="left">
+                <img src="https://e-cdns-images.dzcdn.net/images/cover/aea5d295972a673a994d88a82fb8e83c/250x250-000000-80-0-0.jpg" />
+                <div>
+                    <p>First Person Shooter</p>
+                    <p>J Cole</p>
+                </div>
+                <svg class="likeButton" xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 512 512">
+                    <path d="M47.6 300.4L228.3 469.1c7.5 7 17.4 10.9 27.7 10.9s20.2-3.9 27.7-10.9L464.4 300.4c30.4-28.3 47.6-68 47.6-109.5v-5.8c0-69.9-50.5-129.5-119.4-141C347 36.5 300.6 51.4 268 84L256 96 244 84c-32.6-32.6-79-47.5-124.6-39.9C50.5 55.6 0 115.2 0 185.1v5.8c0 41.5 17.2 81.2 47.6 109.5z"/>
+                </svg>
+            </div>
+
+            <!-- Middle -->
+            <div class="middle">
+                <!-- Top -->
+                <div class="top controls">
+                    <div onclick="skipOrPrevious(false)">
+                        <svg xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 512 512">
+                            <path d="M459.5 440.6c9.5 7.9 22.8 9.7 34.1 4.4s18.4-16.6 18.4-29V96c0-12.4-7.2-23.7-18.4-29s-24.5-3.6-34.1 4.4L288 214.3V256v41.7L459.5 440.6zM256 352V256 128 96c0-12.4-7.2-23.7-18.4-29s-24.5-3.6-34.1 4.4l-192 160C4.2 237.5 0 246.5 0 256s4.2 18.5 11.5 24.6l192 160c9.5 7.9 22.8 9.7 34.1 4.4s18.4-16.6 18.4-29V352z"/>
+                        </svg>
+                    </div>
+                    <div onclick="playPause()" id="ctrlIcon">
+                        <svg id="play" xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 384 512">
+                            <path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/>
+                        </svg>
+                        <svg id="pause" xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 320 512">
+                            <path d="M48 64C21.5 64 0 85.5 0 112V400c0 26.5 21.5 48 48 48H80c26.5 0 48-21.5 48-48V112c0-26.5-21.5-48-48-48H48zm192 0c-26.5 0-48 21.5-48 48V400c0 26.5 21.5 48 48 48h32c26.5 0 48-21.5 48-48V112c0-26.5-21.5-48-48-48H240z"/>
+                        </svg>
+                    </div>
+                    <div onclick="skipOrPrevious(true)">
+                        <svg xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 512 512">
+                            <path d="M52.5 440.6c-9.5 7.9-22.8 9.7-34.1 4.4S0 428.4 0 416V96C0 83.6 7.2 72.3 18.4 67s24.5-3.6 34.1 4.4L224 214.3V256v41.7L52.5 440.6zM256 352V256 128 96c0-12.4 7.2-23.7 18.4-29s24.5-3.6 34.1 4.4l192 160c7.3 6.1 11.5 15.1 11.5 24.6s-4.2 18.5-11.5 24.6l-192 160c-9.5 7.9-22.8 9.7-34.1 4.4s-18.4-16.6-18.4-29V352z"/>
+                        </svg>
+                    </div>
+                </div>
+                
+
+                <!-- Bottom -->
+                <div class="bottom musicPlayer">
+                    <audio controls id="song">
+                        <source type="audio/mpeg" src="https://cdns-preview-f.dzcdn.net/stream/c-f64683cc83df9b7394afcb80ea85216e-2.mp3" />
+                    </audio>
+                    <span id="songCurrentTime">0:00</span>
+                    <div>
+                        <input type="range" value="0" id="progress">
+                    </div>
+                    <span id="songDuration"></span>
+                </div>
+            </div>
+
+            <!-- Right -->
+            <div class="right volumeControls">
+                <svg onclick="mute()" id="volume-low" xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 320 512"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2023 Fonticons, Inc. --><path d="M320 64c0-12.6-7.4-24-18.9-29.2s-25-3.1-34.4 5.3L131.8 160H64c-35.3 0-64 28.7-64 64v64c0 35.3 28.7 64 64 64h67.8L266.7 471.9c9.4 8.4 22.9 10.4 34.4 5.3S320 460.6 320 448V64z"/></svg>
+                <svg onclick="mute()" id="volume-medium" xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 448 512"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2023 Fonticons, Inc. --><path d="M301.1 34.8C312.6 40 320 51.4 320 64V448c0 12.6-7.4 24-18.9 29.2s-25 3.1-34.4-5.3L131.8 352H64c-35.3 0-64-28.7-64-64V224c0-35.3 28.7-64 64-64h67.8L266.7 40.1c9.4-8.4 22.9-10.4 34.4-5.3zM412.6 181.5C434.1 199.1 448 225.9 448 256s-13.9 56.9-35.4 74.5c-10.3 8.4-25.4 6.8-33.8-3.5s-6.8-25.4 3.5-33.8C393.1 284.4 400 271 400 256s-6.9-28.4-17.7-37.3c-10.3-8.4-11.8-23.5-3.5-33.8s23.5-11.8 33.8-3.5z"/></svg>
+                <svg onclick="mute()" id="volume-high" xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 640 512"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2023 Fonticons, Inc. --><path d="M533.6 32.5C598.5 85.3 640 165.8 640 256s-41.5 170.8-106.4 223.5c-10.3 8.4-25.4 6.8-33.8-3.5s-6.8-25.4 3.5-33.8C557.5 398.2 592 331.2 592 256s-34.5-142.2-88.7-186.3c-10.3-8.4-11.8-23.5-3.5-33.8s23.5-11.8 33.8-3.5zM473.1 107c43.2 35.2 70.9 88.9 70.9 149s-27.7 113.8-70.9 149c-10.3 8.4-25.4 6.8-33.8-3.5s-6.8-25.4 3.5-33.8C475.3 341.3 496 301.1 496 256s-20.7-85.3-53.2-111.8c-10.3-8.4-11.8-23.5-3.5-33.8s23.5-11.8 33.8-3.5zm-60.5 74.5C434.1 199.1 448 225.9 448 256s-13.9 56.9-35.4 74.5c-10.3 8.4-25.4 6.8-33.8-3.5s-6.8-25.4 3.5-33.8C393.1 284.4 400 271 400 256s-6.9-28.4-17.7-37.3c-10.3-8.4-11.8-23.5-3.5-33.8s23.5-11.8 33.8-3.5zM301.1 34.8C312.6 40 320 51.4 320 64V448c0 12.6-7.4 24-18.9 29.2s-25 3.1-34.4-5.3L131.8 352H64c-35.3 0-64-28.7-64-64V224c0-35.3 28.7-64 64-64h67.8L266.7 40.1c9.4-8.4 22.9-10.4 34.4-5.3z"/></svg>
+                <svg onclick="mute()" id="volume-muted" xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 576 512"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2023 Fonticons, Inc. --><path d="M301.1 34.8C312.6 40 320 51.4 320 64V448c0 12.6-7.4 24-18.9 29.2s-25 3.1-34.4-5.3L131.8 352H64c-35.3 0-64-28.7-64-64V224c0-35.3 28.7-64 64-64h67.8L266.7 40.1c9.4-8.4 22.9-10.4 34.4-5.3zM425 167l55 55 55-55c9.4-9.4 24.6-9.4 33.9 0s9.4 24.6 0 33.9l-55 55 55 55c9.4 9.4 9.4 24.6 0 33.9s-24.6 9.4-33.9 0l-55-55-55 55c-9.4 9.4-24.6 9.4-33.9 0s-9.4-24.6 0-33.9l55-55-55-55c-9.4-9.4-9.4-24.6 0-33.9s24.6-9.4 33.9 0z"/></svg>
+                <div>
+                    <input type="range" id="volume-slider" max="1.0" value="0.5" step="0.05">
+                </div>
+            </div>
+        </div>
+        <br>
+        <br>
+        <br>
+        <br>
+        <br>
+
+        <!-- <div style="display: grid; grid-template-columns: repeat(2, 1fr); grid-gap: 5%; overflow: auto;">
+            <h2>overflow-wrap: normal (default):</h2>
+            <p class="a" style="width: 5vw; overflow-wrap:break-word;">acoustic afternoone</p>
+        </div>
+        
+        <h1>The vertical-align property</h1>
+
+        <div id="myDIV" style="height: 300px">
+        In this paragraph, the <p style="background-color: blue; display: inline;">blue span</p> change the vertical-align value
+        </div> -->
+        
+        <!-- Optional JavaScript -->
+        <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+        
+        <!-- <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script> -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+        <!-- <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script> -->
+
+        <script type="text/javascript" src="../../../assets/javascript/customAudio&volume_interfaces.js"></script>
+
+        <script>
+            let mainSectionDiv = document.querySelector('body .main');
+            console.log("Testin123: " + mainSectionDiv);
+
+            mainSectionDiv.onscroll = function(){
+                let navBar = document.querySelector('body .main .navBar');
+                console.log(navBar);
+                console.log("mainSectionDiv scroll-y position: " + this.scrollTop);
+
+                // 0 < window.scrollY && window.scrollY <= 203 ? 203 < window.scrollY && window.scrollY <= 305 ? 305 < window.scrollY && window.scrollY <= 650 ?
+                // navBar.style.backgroundColor = "#1e1e1e" :
+                // navBar.style.backgroundColor = "#1c1c1c" :
+                // navBar.style.backgroundColor = "rgb(26 24 24)":
+                // "";
+
+                if(0 < this.scrollTop && this.scrollTop < 30){
+                    navBar.style.backgroundColor = "#1e1e1e";
+                } else if(30 < this.scrollTop && this.scrollTop < 50){
+                    navBar.style.backgroundColor = "rgb(29 29 29)";
+                } else if(50 <= this.scrollTop && this.scrollTop < 65){
+                    navBar.style.backgroundColor = "rgb(28 28 28)";
+                } else if(65 <= this.scrollTop && this.scrollTop < 75){
+                    navBar.style.backgroundColor = "rgb(27 27 27)";
+                } else if(75 <= this.scrollTop && this.scrollTop < 90){
+                    navBar.style.backgroundColor = "rgb(26 26 26)";
+                } else if(90 <= this.scrollTop && this.scrollTop < 110) {
+                    navBar.style.backgroundColor = "rgb(25 25 25)";
+                } else if(100 <= this.scrollTop && this.scrollTop < 115) {
+                    navBar.style.backgroundColor = "rgb(24 24 24)";
+                } else if(115 <= this.scrollTop && this.scrollTop < 125){
+                    navBar.style.backgroundColor = "rgb(23 23 23)";
+                } else if(125 <= this.scrollTop && this.scrollTop < 150) {
+                    navBar.style.backgroundColor = "rgb(21 21 21)";
+                } else if(150 <= this.scrollTop && this.scrollTop < 175) {
+                    navBar.style.backgroundColor = "rgb(19 19 19)";
+                }
+            }
+        </script>
+    </body>
+</html>
