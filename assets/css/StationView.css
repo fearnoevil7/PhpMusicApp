@@ -75,7 +75,7 @@ h4 {
     
     /* position: fixed; */
     overflow-y: auto;
-    height: 88vh;
+    height: 47rem;
     width: 78.5%;
     z-index: 0;
 }
@@ -379,7 +379,6 @@ div.genreContainer {
     background: linear-gradient(180deg, #212121 0%, #1c1c1c 50%, #131313 90%);
     /* background: linear-gradient(180deg, #212121 0%, #191919 55%, #131313 90%); */
     /* background: linear-gradient(180deg, #212121 0%, #1b1b1b 55%, #131313 90%); */
-
 }
 
 div.genreScrollMenu {
@@ -391,7 +390,7 @@ div.genreScrollMenu {
     grid-column-gap: 7%;
     column-gap: 9%;
     /* height: 15.8vh; */
-    height: 22vh;
+    height: 12rem;
     width: 86%;
     border-radius: 10px;
 
@@ -494,8 +493,8 @@ div.tracksScrollMenu {
     grid-auto-flow: column;
     column-gap: 5%;
     border-radius: 10px;
-    height: 42.5vh;
-    width: 69vw;
+    height: 23rem;
+    width: 85%;
     overflow-y: hidden;
     margin-left: 6%;
 
@@ -536,7 +535,7 @@ div.tracksScrollMenu .top, div.tracksScrollMenu .bottom{
 }
 
 div.tracksScrollMenu .top {
-    width: 26vw;
+    width: 24rem;
     margin-bottom: 3%;
     position: relative;
     right: 11%;
@@ -549,7 +548,7 @@ div.tracksScrollMenu .top .left {
 
 div.tracksScrollMenu .top .left img {
     border-radius: 50%;
-    width: 6vw;
+    width: 6.5rem;
     aspect-ratio: 1/1;
 }
 
@@ -588,7 +587,7 @@ div.tracksScrollMenu .bottom {
     position: relative;
     left: 2.5%;
     height: 11.3rem;
-    width:29vw;
+    width: 25.5rem;
     min-width: 25rem;
 }
 
@@ -607,7 +606,7 @@ div.tracksScrollMenu .bottom .left img.albumCover:hover {
 
 div.tracksScrollMenu .bottom .right {
     margin: 10% auto 0 auto;
-    width: 15vw;
+    width: 12rem;
 }
 
 div.tracksScrollMenu .bottom .right div {
@@ -639,7 +638,7 @@ div.tracksScrollMenu .bottom .right div button {
     visibility: visible;
     color: #ffffff;
     border: none;
-    width: 3vw;
+    width: 2rem;
     aspect-ratio: 1/1;
     transition: .35s ease;
     outline: none;
@@ -651,8 +650,8 @@ div.tracksScrollMenu .bottom .right div button svg {
     position: relative;
     left: 4%;
     bottom: 5%;
-    width: 1vw;
-    height: 2vh;
+    width: 1rem;
+    height: 1rem;
     transition: .35s ease;
 }
 
@@ -670,8 +669,8 @@ div.tracksScrollMenu .bottom .right div .pauseButtonSvg {
 }
 
 div.tracksScrollMenu .bottom .right div .likeButton {
-    width: 3vw;
-    height: 3vh;
+    height: 1.5rem;
+    width: 2rem;
     fill: #ffffff;
     stroke: var(--secondary-color);
     stroke-width: 8%;
@@ -707,8 +706,8 @@ div.albumScrollMenu{
     grid-auto-flow: column;
     column-gap: 4%;
     margin: .25% auto auto 5%;
-    width: 71vw;
-    height: 40vh;
+    width: 90%;
+    height: 21rem;
     max-height: 21rem;
     scroll-snap-type: x mandatory;
     overflow-y: hidden;
@@ -730,7 +729,7 @@ div.albumScrollMenu::-webkit-scrollbar {
 div.albumScrollMenu div.container{
     display: inline-block;
     width: 15vw;
-    height: 39vh;
+    height: 20;
     scroll-snap-align: start;
     padding: 10% 0 0 10%;
     border-radius: 13px;
@@ -780,7 +779,7 @@ div.artistScrollMenu{
     grid-auto-flow: column;
     column-gap: 4%;
     margin: .25% auto auto 5%;
-    height: 55vh;
+    height: 29rem;
     width: 89.8%;
 
     /* Scroll Snap */
@@ -800,7 +799,7 @@ div.artistScrollMenu::-webkit-scrollbar {
 div.artistScrollMenu div{
     display: inline-block;
     width: 15vw;
-    height: 55vh;
+    height: 28rem;
     padding-left: 10%;
     padding-top: 10%;
     border-radius: 8px;
@@ -841,7 +840,7 @@ div.artistScrollMenu div p {
 }
 
 .sidebar .sidebar_top {
-    background: #131313;
+    background:#1c1b1b; 
     width: 100%;
     display: grid;
     padding: 1rem 0 1rem 1rem;
@@ -874,7 +873,7 @@ div.artistScrollMenu div p {
 }
 
 .sidebar .sidebar_bottom {
-    background-color: #131313;
+    background-color: #1c1b1b;
     height: 39.75rem;
     width: 100%;
     display: inline-block;
@@ -1355,7 +1354,7 @@ div.artistScrollMenu div p {
 /* Music Player Wrapper */
 body div.MusicPlayer{
     width: 100%;
-    height: 11vh;
+    height: 6rem;
     background-color: black;
     position: fixed;
     bottom: 0%;

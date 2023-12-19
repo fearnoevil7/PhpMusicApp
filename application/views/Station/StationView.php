@@ -1039,6 +1039,7 @@
 
             let mainSectionDiv = document.querySelector('body .main');
             mainSectionDiv.onscroll = function(){
+                console.log(this.scrollTop);
                 let navBar = document.querySelector('body .main .navBar');
                 
                 let opacity = (this.scrollTop * 100 / 175) / 100;
@@ -1046,6 +1047,12 @@
                 opacity > 1 ? opacity = 1 : opacity = opacity; 
 
                 navBar.style.backgroundColor = `rgba(19, 19, 19, ${opacity}`;
+                // this.scrollTop >= 50 ? navbar.style.top = "0%" : navbar.style.top = "1%";
+                if (this.scrollTop >= 50) {
+                    navBar.style.top = "0%";
+                } else {
+                    navBar.style.top = "1%";
+                }
 
             }
         </script>
